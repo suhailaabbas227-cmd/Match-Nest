@@ -3,7 +3,6 @@ import { useAuth } from "./AuthContext";
 import Navbar from "./components/Navbar";
 
 import Signup from "./pages/Signup";
-import Verify from "./pages/Verify";
 import Login from "./pages/Login";
 import ModeSelect from "./pages/ModeSelect";
 import ProfileBuilder from "./pages/ProfileBuilder";
@@ -33,7 +32,6 @@ export default function App() {
       {user && user.mode && user.profileComplete && <Navbar />}
       <Routes>
         <Route path="/signup" element={user ? <Navigate to="/" /> : <Signup />} />
-        <Route path="/verify" element={<Verify />} />
         <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
 
         {/* Onboarding (logged in but not finished) */}
