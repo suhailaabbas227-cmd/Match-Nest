@@ -3,6 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { getMe, signInUser, signUpUser } from "../api";
 import "./Signup.css";
 
+function dateYearsAgo(years) {
+  const value = new Date();
+  value.setFullYear(value.getFullYear() - years);
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${value.getFullYear()}-${month}-${day}`;
+}
+
 function Logo() {
   return (
     <div className="hs-logo">
@@ -183,12 +191,22 @@ export default function Signup() {
                 <input id="su-email" type="email" value={f.email} onChange={set("email")} required placeholder="Email Address" />
               </div>
               <div className="hs-field">
-                <input type={showPw ? "text" : "password"} value={f.password} onChange={set("password")} required minLength={6} placeholder="Password" />
+                <input type={showPw ? "text" : "password"} value={f.password} onChange={set("password")} required minLength={8} autoComplete="new-password" placeholder="Password (8+ characters)" />
                 <button type="button" className="eye" onClick={() => setShowPw(!showPw)} aria-label="Toggle password">{showPw ? "Hide" : "Show"}</button>
               </div>
               <div className="hs-field">
-                <input type="date" value={f.dateOfBirth} onChange={set("dateOfBirth")} placeholder="Date of Birth" />
+                <input
+                  type="date"
+                  value={f.dateOfBirth}
+                  onChange={set("dateOfBirth")}
+                  min={dateYearsAgo(120)}
+                  max={dateYearsAgo(18)}
+                  required
+                  aria-label="Date of birth"
+                  title="You must be at least 18 years old"
+                />
               </div>
+              <p className="hs-age-note">MatchNest is for adults aged 18 and over only.</p>
               <button className="hs-submit" disabled={busy}>{busy ? "Creating…" : "Create Account"}</button>
             </form>
           ) : tab === "login" ? (

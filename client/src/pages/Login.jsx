@@ -31,7 +31,7 @@ export default function Login() {
     <div className="center-screen">
       <div className="card auth-card">
         <div className="auth-head">
-          <div className="brand">Duo<span>Match</span></div>
+          <div className="brand">Match<span>Nest</span></div>
           <p>Log in to your account.</p>
         </div>
         <form onSubmit={submit}>
@@ -50,5 +50,4 @@ export default function Login() {
     </div>
   );
 }
-
 

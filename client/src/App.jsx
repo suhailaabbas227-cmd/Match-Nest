@@ -4,6 +4,9 @@ import Navbar from "./components/Navbar";
 
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import AgeCheck from "./pages/AgeCheck";
 import ModeSelect from "./pages/ModeSelect";
 import ProfileBuilder from "./pages/ProfileBuilder";
 import Browse from "./pages/Browse";
@@ -18,25 +21,76 @@ function Protected({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="center-screen">Loading…</div>;
   if (!user) return <Navigate to="/signup" replace />;
+  if (user.suspended) return <Navigate to="/account-unavailable" replace />;
+  if (!user.dateOfBirth) return <Navigate to="/age-check" replace />;
   if (!user.mode) return <Navigate to="/mode" replace />;
   if (!user.profileComplete) return <Navigate to="/build" replace />;
   return children;
 }
 
 export default function App() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   if (loading) return <div className="center-screen">Loading…</div>;
 
   return (
     <>
-      {user && user.mode && user.profileComplete && <Navbar />}
+      {user && !user.suspended && user.mode && user.profileComplete && <Navbar />}
       <Routes>
         <Route path="/signup" element={user ? <Navigate to="/" /> : <Signup />} />
         <Route path="/login" element={user ? <Navigate to="/" /> : <Login />} />
+        <Route path="/forgot" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route
+          path="/age-check"
+          element={
+            !user ? <Navigate to="/login" replace />
+              : user.suspended ? <Navigate to="/account-unavailable" replace />
+              : user.dateOfBirth ? <Navigate to="/" replace />
+                : <AgeCheck />
+          }
+        />
+        <Route
+          path="/account-unavailable"
+          element={
+            user?.suspended ? (
+              <div className="center-screen">
+                <div className="card auth-card">
+                  <div className="auth-head">
+                    <div className="brand">Match<span>Nest</span></div>
+                    <h2>Account unavailable</h2>
+                    <p>
+                      This account has been suspended for a safety review.
+                      Contact MatchNest support if you believe this is a mistake.
+                    </p>
+                  </div>
+                  <button className="btn" onClick={logout}>Log out</button>
+                </div>
+              </div>
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
 
         {/* Onboarding (logged in but not finished) */}
-        <Route path="/mode" element={user ? <ModeSelect /> : <Navigate to="/login" />} />
-        <Route path="/build" element={user ? <ProfileBuilder /> : <Navigate to="/login" />} />
+        <Route
+          path="/mode"
+          element={
+            !user ? <Navigate to="/login" />
+              : user.suspended ? <Navigate to="/account-unavailable" />
+              : !user.dateOfBirth ? <Navigate to="/age-check" />
+                : <ModeSelect />
+          }
+        />
+        <Route
+          path="/build"
+          element={
+            !user ? <Navigate to="/login" />
+              : user.suspended ? <Navigate to="/account-unavailable" />
+              : !user.dateOfBirth ? <Navigate to="/age-check" />
+                : <ProfileBuilder />
+          }
+        />
 
         {/* Main app */}
         <Route path="/" element={<Protected><Browse /></Protected>} />
