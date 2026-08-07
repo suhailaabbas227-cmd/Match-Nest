@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api } from "../api";
-import { useAuth } from "../AuthContext";
+import { getMe, signInUser, signUpUser } from "../api";
 import "./Signup.css";
 
 function Logo() {
@@ -20,12 +19,12 @@ function Logo() {
 
 export default function Signup() {
   const nav = useNavigate();
-  const { login } = useAuth();
   const formRef = useRef(null);
 
   const [tab, setTab] = useState("signup"); // 'signup' | 'login'
   const [showPw, setShowPw] = useState(false);
   const [err, setErr] = useState("");
+  const [confirmationEmail, setConfirmationEmail] = useState("");
   const [busy, setBusy] = useState(false);
 
   const [f, setF] = useState({
@@ -40,17 +39,24 @@ export default function Signup() {
     e.preventDefault();
     setErr(""); setBusy(true);
     try {
-      const payload = {
+      const res = await signUpUser({
         fullName: `${f.firstName} ${f.lastName}`.trim(),
         email: f.email,
         password: f.password,
         dateOfBirth: f.dateOfBirth,
         mode: null,
-      };
-      const res = await api.post("/auth/signup", payload);
-      nav("/verify", { state: { userId: res.userId, email: f.email, devOtp: res.devOtp } });
+      });
+      if (res.error) {
+        setErr(res.error);
+        return;
+      }
+      if (res.needsEmailConfirmation) {
+        setConfirmationEmail(f.email);
+        return;
+      }
+      nav("/mode");
     } catch (e) {
-      setErr(e.error || "Could not create account");
+      setErr(e.message || "Could not create account");
     } finally {
       setBusy(false);
     }
@@ -60,15 +66,15 @@ export default function Signup() {
     e.preventDefault();
     setErr(""); setBusy(true);
     try {
-      const res = await api.post("/auth/login", lf);
-      login(res.token, res.user);
-      nav(res.user.mode ? (res.user.profileComplete ? "/" : "/build") : "/mode");
-    } catch (e) {
-      if (e.needsVerification) {
-        nav("/verify", { state: { userId: e.userId, email: lf.email, devOtp: e.devOtp } });
+      const res = await signInUser(lf.email, lf.password);
+      if (res.error) {
+        setErr(res.error);
         return;
       }
-      setErr(e.error || "Login failed");
+      const me = await getMe();
+      nav(me?.mode ? (me.profileComplete ? "/" : "/build") : "/mode");
+    } catch (e) {
+      setErr(e.message || "Login failed");
     } finally {
       setBusy(false);
     }
@@ -156,8 +162,14 @@ export default function Signup() {
           </div>
 
           {err && <div className="hs-err">{err}</div>}
+          {confirmationEmail && (
+            <div className="success" role="status">
+              <b>Check your email.</b><br />
+              We sent a secure verification link to {confirmationEmail}. Open it to activate your MatchNest account.
+            </div>
+          )}
 
-          {tab === "signup" ? (
+          {tab === "signup" && !confirmationEmail ? (
             <form className="hs-form" onSubmit={submitSignup}>
               <div className="grid2">
                 <div className="hs-field">
@@ -179,7 +191,7 @@ export default function Signup() {
               </div>
               <button className="hs-submit" disabled={busy}>{busy ? "Creating…" : "Create Account"}</button>
             </form>
-          ) : (
+          ) : tab === "login" ? (
             <form className="hs-form" onSubmit={submitLogin}>
               <div className="hs-field">
                 <input type="email" value={lf.email} onChange={setL("email")} required placeholder="Email Address" />
@@ -190,7 +202,7 @@ export default function Signup() {
               </div>
               <button className="hs-submit" disabled={busy}>{busy ? "Logging in…" : "Log In"}</button>
             </form>
-          )}
+          ) : null}
 
           <div className="hs-or-div">or continue with</div>
           <div className="hs-social">

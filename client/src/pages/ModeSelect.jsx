@@ -11,7 +11,7 @@ function Brand() {
         <path d="M14 7.5C9.5 7.5 6 11 6 15.3c0 6.4 8.8 12 12 14.4 3.2-2.1 12-8 12-14.4C30 11 26.5 7.5 22 7.5c-2.6 0-4.7 1.3-6 3.3-1.3-2-3.4-3.3-2-3.3Z" fill="#ec1e79"/>
         <path d="M24 11.5c-2.6 0-4.7 1.3-6 3.3 1.3 2 6 6.2 8 8.4 2.2-2.1 8-6.4 8-11.4 0-4.3-3.5-7.8-8-7.8-1 0-1.9.2-2.7.5 1.7 1.2 2.9 3.1 3.4 5.3" stroke="#8b3df0" strokeWidth="2.2" fill="none" strokeLinejoin="round"/>
       </svg>
-      <span><span className="pink">Heart</span>Step</span>
+      <span><span className="pink">Match</span>Nest</span>
     </div>
   );
 }

@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { io } from "socket.io-client";
 import { api } from "../api";
+import { supabase } from "../supabase";
 import { useAuth } from "../AuthContext";
 
-let socket;
 
 export default function Chat() {
   const { userId } = useParams();
@@ -17,21 +16,12 @@ export default function Chat() {
   const [other, setOther] = useState(null);
   const endRef = useRef(null);
 
+
   // List conversations.
   useEffect(() => {
     api.get("/chat/conversations").then((r) => setConversations(r.conversations));
   }, []);
 
-  // Socket connection (once).
-  useEffect(() => {
-    socket = io("/", { transports: ["websocket", "polling"] });
-    socket.on("message", (m) => {
-      setMessages((prev) =>
-        prev.some((x) => x.id === m.id) ? prev : [...prev, m]
-      );
-    });
-    return () => socket?.disconnect();
-  }, []);
 
   // Open a conversation when a userId is in the URL.
   useEffect(() => {
@@ -39,15 +29,41 @@ export default function Chat() {
     api.get(`/chat/with/${userId}`).then((r) => {
       setConvo(r.conversation);
       setMessages(r.messages);
-      socket?.emit("join", r.conversation.id);
       const o = conversations.find((c) => c.user?.id === userId)?.user;
       setOther(o || null);
     }).catch(() => {});
-    return () => { if (convo) socket?.emit("leave", convo.id); };
     // eslint-disable-next-line
   }, [userId, conversations]);
 
+
+  // Live updates: subscribe to new messages in the open conversation.
+  useEffect(() => {
+    if (!convo) return;
+    const channel = supabase
+      .channel(`messages:${convo.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${convo.id}` },
+        (payload) => {
+          const m = payload.new;
+          const msg = {
+            id: m.id,
+            from: m.from_user,
+            fromName: m.from_name,
+            isChaperone: m.is_chaperone,
+            text: m.text,
+            createdAt: m.created_at,
+          };
+          setMessages((prev) => (prev.some((x) => x.id === msg.id) ? prev : [...prev, msg]));
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [convo?.id]);
+
+
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
 
   async function send(e) {
     e.preventDefault();
@@ -55,6 +71,7 @@ export default function Chat() {
     await api.post(`/chat/${convo.id}/message`, { text });
     setText("");
   }
+
 
   async function addChaperone() {
     const email = prompt("Enter the email of the family member to add as chaperone:");
@@ -67,7 +84,9 @@ export default function Chat() {
     }
   }
 
+
   const Name = (u) => u?.profile?.displayName || u?.profile?.fullLegalName || u?.fullName || "Member";
+
 
   return (
     <div className="container">
@@ -84,6 +103,7 @@ export default function Chat() {
             </div>
           ))}
         </div>
+
 
         <div className="chat-main">
           {!convo ? (
