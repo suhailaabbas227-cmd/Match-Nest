@@ -4,6 +4,25 @@
 // api.get / api.post / api.put / api.upload with the same paths.
 import { supabase } from "./supabase";
 
+const PUBLIC_PROFILE_SELECT = [
+  "id",
+  "full_name",
+  "gender",
+  "country",
+  "city",
+  "mode",
+  "profile",
+  "profile_photo",
+  "photos",
+  "verified",
+  "badge",
+  "profile_complete",
+  "photo_privacy",
+  "created_at",
+].join(",");
+
+const photoUrlCache = new Map();
+
 
 // ---------------------------------------------------------------------------
 // Mappers between the database row (snake_case) and the app's user shape.
@@ -24,7 +43,7 @@ export function rowToUser(r) {
     profile: r.profile || {},
     profilePhoto: r.profile_photo || null,
     photos: r.photos || [],
-    verified: r.verified ?? true,
+    verified: r.verified ?? false,
     badge: r.badge ?? false,
     profileComplete: r.profile_complete ?? false,
     photoPrivacy: r.photo_privacy ?? false,
@@ -42,6 +61,51 @@ function ageFromDob(dob) {
   return Math.floor((Date.now() - d.getTime()) / (365.25 * 24 * 3600 * 1000));
 }
 
+function storedPhotoPath(value) {
+  if (!value || typeof value !== "string") return null;
+  if (!/^https?:\/\//i.test(value)) return value;
+
+  const markers = [
+    "/storage/v1/object/public/photos/",
+    "/storage/v1/object/sign/photos/",
+    "/storage/v1/object/authenticated/photos/",
+  ];
+  const marker = markers.find((candidate) => value.includes(candidate));
+  if (!marker) return null;
+  return decodeURIComponent(value.split(marker)[1]?.split("?")[0] || "") || null;
+}
+
+async function signedPhotoUrl(value) {
+  const path = storedPhotoPath(value);
+  if (!path) return null;
+  const cached = photoUrlCache.get(path);
+  if (cached && cached.expiresAt > Date.now() + 30_000) return cached.url;
+
+  const { data, error } = await supabase.storage
+    .from("photos")
+    .createSignedUrl(path, 15 * 60);
+  if (error) return null;
+
+  photoUrlCache.set(path, {
+    url: data.signedUrl,
+    expiresAt: Date.now() + 14 * 60 * 1000,
+  });
+  return data.signedUrl;
+}
+
+async function withSignedPhotos(user) {
+  if (!user) return null;
+  const [profilePhoto, photos] = await Promise.all([
+    signedPhotoUrl(user.profilePhoto),
+    Promise.all((user.photos || []).map(signedPhotoUrl)),
+  ]);
+  return {
+    ...user,
+    profilePhoto,
+    photos: photos.filter(Boolean),
+  };
+}
+
 
 // Guardian/contact fields stay hidden until two users match.
 const PRIVATE_PROFILE_FIELDS = ["wali"];
@@ -50,7 +114,15 @@ const PRIVATE_PROFILE_FIELDS = ["wali"];
 // What another member sees when browsing (mirrors the old server publicView).
 function publicView(u, matched = false) {
   if (!u) return null;
-  const { email, phone, blockedUsers, ...rest } = u;
+  const {
+    email,
+    phone,
+    dateOfBirth,
+    blockedUsers,
+    role,
+    suspended,
+    ...rest
+  } = u;
   let profile = { ...(rest.profile || {}) };
   if (!matched) for (const f of PRIVATE_PROFILE_FIELDS) delete profile[f];
   const blur = u.mode === "marriage" && u.photoPrivacy && !matched;
@@ -72,17 +144,32 @@ function publicView(u, matched = false) {
 export async function getMe() {
   const { data: { user: au } } = await supabase.auth.getUser();
   if (!au) return null;
-  const { data, error } = await supabase
-    .from("profiles").select("*").eq("id", au.id).single();
-  if (error) {
-    // Profile row may not exist yet right after signup — return a minimal user.
-    return { id: au.id, email: au.email, fullName: "", mode: null, profileComplete: false, role: "user", profile: {}, photos: [] };
+  const { data, error } = await supabase.rpc("get_my_profile");
+  if (error) throw new Error(error.message);
+  if (!data) {
+    return {
+      id: au.id,
+      email: au.email,
+      fullName: "",
+      mode: null,
+      profileComplete: false,
+      role: "user",
+      profile: {},
+      photos: [],
+    };
   }
-  return rowToUser(data);
+  return withSignedPhotos(rowToUser(data));
 }
 
 
 export async function signUpUser({ fullName, email, password, dateOfBirth, mode }) {
+  const age = ageFromDob(dateOfBirth);
+  if (age == null) return { error: "Please enter a valid date of birth." };
+  if (age < 18) {
+    return { error: "You must be at least 18 years old to use MatchNest." };
+  }
+  if (age > 120) return { error: "Please enter a valid date of birth." };
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -110,6 +197,33 @@ export async function signInUser(email, password) {
   return {};
 }
 
+export async function requestPasswordReset(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  });
+  if (error) return { error: error.message };
+  return {};
+}
+
+export async function updatePassword(password) {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: error.message };
+  return {};
+}
+
+export async function confirmDateOfBirth(dateOfBirth) {
+  const age = ageFromDob(dateOfBirth);
+  if (age == null || age < 18 || age > 120) {
+    return { error: "You must be at least 18 years old to use MatchNest." };
+  }
+
+  const { data, error } = await supabase.rpc("confirm_my_date_of_birth", {
+    requested_dob: dateOfBirth,
+  });
+  if (error) return { error: error.message };
+  return { user: await withSignedPhotos(rowToUser(data)) };
+}
+
 
 // ---------------------------------------------------------------------------
 // Connections helpers.
@@ -126,9 +240,15 @@ async function myAcceptedIds(meId) {
 
 async function fetchProfiles(ids) {
   if (!ids.length) return {};
-  const { data } = await supabase.from("profiles").select("*").in("id", ids);
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(PUBLIC_PROFILE_SELECT)
+    .in("id", ids);
+  if (error) throw new Error(error.message);
   const map = {};
-  (data || []).forEach((r) => (map[r.id] = rowToUser(r)));
+  await Promise.all((data || []).map(async (r) => {
+    map[r.id] = await withSignedPhotos(rowToUser(r));
+  }));
   return map;
 }
 
@@ -147,16 +267,16 @@ async function handleGet(path) {
   // ---- Browse list ----
   if (p === "/browse") {
     const me = await getMe();
-    let query = supabase.from("profiles").select("*")
+    let query = supabase.from("profiles").select(PUBLIC_PROFILE_SELECT)
       .eq("mode", me.mode).eq("verified", true).eq("profile_complete", true)
-      .neq("id", me.id).neq("role", "admin").eq("suspended", false);
+      .neq("id", me.id)
+      .order("created_at", { ascending: false })
+      .limit(60);
     const { data, error } = await query;
     if (error) throw new Error(error.message);
     const accepted = await myAcceptedIds(me.id);
-    const blockedByMe = me.blockedUsers || [];
-    const profiles = (data || [])
+    const filtered = (data || [])
       .map(rowToUser)
-      .filter((u) => !blockedByMe.includes(u.id) && !(u.blockedUsers || []).includes(me.id))
       .filter((u) => {
         const pr = u.profile || {};
         if (q.city && !`${u.city} ${pr.city || ""}`.toLowerCase().includes(q.city.toLowerCase())) return false;
@@ -172,6 +292,7 @@ async function handleGet(path) {
         return true;
       })
       .map((u) => publicView(u, accepted.has(u.id)));
+    const profiles = await Promise.all(filtered.map(withSignedPhotos));
     return { profiles };
   }
 
@@ -206,10 +327,15 @@ async function handleGet(path) {
   if (p.startsWith("/browse/")) {
     const id = p.split("/")[2];
     const me = await getMe();
-    const { data, error } = await supabase.from("profiles").select("*").eq("id", id).single();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(PUBLIC_PROFILE_SELECT)
+      .eq("id", id)
+      .single();
     if (error) throw new Error("Profile not found");
     const accepted = await myAcceptedIds(me.id);
-    return { profile: publicView(rowToUser(data), accepted.has(id)) };
+    const profile = publicView(rowToUser(data), accepted.has(id));
+    return { profile: await withSignedPhotos(profile) };
   }
 
 
@@ -251,21 +377,24 @@ async function handleGet(path) {
     const me = await getMe();
     const accepted = await myAcceptedIds(me.id);
     if (!accepted.has(otherId)) throw new Error("You can only chat with matched users");
-    const convo = await getOrCreateConversation(me.id, otherId);
-    const { data: msgs } = await supabase.from("messages").select("*")
+    const convo = await getOrCreateConversation(otherId);
+    const { data: msgs, error } = await supabase.from("messages").select("*")
       .eq("conversation_id", convo.id).order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
     const messages = (msgs || []).map(mapMessage);
     return { conversation: convo, messages };
   }
 
 
-  // ---- Admin (best-effort; reads only) ----
+  // ---- Admin ----
   if (p === "/safety/admin/users") {
-    const { data } = await supabase.from("profiles").select("*");
+    const { data, error } = await supabase.rpc("admin_list_users");
+    if (error) throw new Error(error.message);
     return { users: (data || []).map(rowToUser) };
   }
   if (p === "/safety/admin/reports") {
-    const { data } = await supabase.from("reports").select("*").order("created_at", { ascending: false });
+    const { data, error } = await supabase.rpc("admin_list_reports");
+    if (error) throw new Error(error.message);
     const ids = [...new Set((data || []).flatMap((r) => [r.reporter, r.reported]))];
     const map = await fetchProfiles(ids);
     const asUser = (id) => (map[id] ? { id, fullName: map[id].fullName, profile: map[id].profile } : { id, fullName: "(unknown)" });
@@ -294,12 +423,10 @@ function mapMessage(m) {
 }
 
 
-async function getOrCreateConversation(meId, otherId) {
-  const { data: existing } = await supabase.from("conversations").select("*")
-    .contains("participants", [meId, otherId]).limit(1);
-  if (existing && existing.length) return existing[0];
-  const { data, error } = await supabase.from("conversations")
-    .insert({ participants: [meId, otherId], chaperones: [] }).select().single();
+async function getOrCreateConversation(otherId) {
+  const { data, error } = await supabase.rpc("get_or_create_conversation", {
+    other_user: otherId,
+  });
   if (error) throw new Error(error.message);
   return data;
 }
@@ -311,74 +438,52 @@ async function handlePost(path, body = {}) {
 
   // ---- Profile: pick mode ----
   if (p === "/profile/mode") {
-    const me = await getMe();
-    const { data, error } = await supabase.from("profiles")
-      .update({ mode: body.mode }).eq("id", me.id).select().single();
+    const { data, error } = await supabase.rpc("set_profile_mode", {
+      requested_mode: body.mode,
+    });
     if (error) throw new Error(error.message);
-    return { user: rowToUser(data) };
+    return { user: await withSignedPhotos(rowToUser(data)) };
   }
 
 
   // ---- Profile: switch mode ----
   if (p === "/profile/switch-mode") {
-    const me = await getMe();
-    const next = me.mode === "marriage" ? "dating" : "marriage";
-    const { data, error } = await supabase.from("profiles")
-      .update({ mode: next }).eq("id", me.id).select().single();
+    const { data, error } = await supabase.rpc("switch_profile_mode");
     if (error) throw new Error(error.message);
-    return { user: rowToUser(data) };
+    return { user: await withSignedPhotos(rowToUser(data)) };
   }
 
 
   // ---- Browse: send connection request ----
   if (p.startsWith("/browse/connect/")) {
     const to = p.split("/")[3];
-    const me = await getMe();
-    if (to === me.id) throw new Error("Cannot connect to yourself");
-    const { data: rows } = await supabase.from("connections").select("*")
-      .or(`and(from_user.eq.${me.id},to_user.eq.${to}),and(from_user.eq.${to},to_user.eq.${me.id})`);
-    const existing = rows?.[0];
-    if (existing) {
-      if (existing.status === "accepted") return { status: "accepted", connection: existing };
-      if (existing.from_user === to && existing.status === "pending") {
-        await supabase.from("connections").update({ status: "accepted", accepted_at: new Date().toISOString() }).eq("id", existing.id);
-        return { status: "accepted", matched: true };
-      }
-      return { status: existing.status, connection: existing };
-    }
-    const { data, error } = await supabase.from("connections")
-      .insert({ from_user: me.id, to_user: to, status: "pending" }).select().single();
+    const { data, error } = await supabase.rpc("send_connection", {
+      target_user: to,
+    });
     if (error) throw new Error(error.message);
-    return { status: "pending", connection: data };
+    return data;
   }
 
 
   // ---- Browse: respond to a request ----
   if (p.startsWith("/browse/respond/")) {
     const connId = p.split("/")[3];
-    if (body.action === "accept") {
-      await supabase.from("connections").update({ status: "accepted", accepted_at: new Date().toISOString() }).eq("id", connId);
-      return { status: "accepted", matched: true };
-    }
-    await supabase.from("connections").update({ status: "declined" }).eq("id", connId);
-    return { status: "declined" };
+    const { data, error } = await supabase.rpc("respond_connection", {
+      connection_id: connId,
+      requested_action: body.action,
+    });
+    if (error) throw new Error(error.message);
+    return data;
   }
 
 
   // ---- Chat: send a message ----
   if (/^\/chat\/[^/]+\/message$/.test(p)) {
     const conversationId = p.split("/")[2];
-    const me = await getMe();
-    if (!body.text?.trim()) throw new Error("Empty message");
-    const { data: convo } = await supabase.from("conversations").select("*").eq("id", conversationId).single();
-    const isChap = (convo?.chaperones || []).includes(me.id);
-    const { data, error } = await supabase.from("messages").insert({
-      conversation_id: conversationId,
-      from_user: me.id,
-      from_name: me.profile?.displayName || me.fullName || "User",
-      is_chaperone: isChap,
-      text: body.text.trim(),
-    }).select().single();
+    const { data, error } = await supabase.rpc("send_chat_message", {
+      target_conversation: conversationId,
+      message_text: body.text || "",
+    });
     if (error) throw new Error(error.message);
     return { message: mapMessage(data) };
   }
@@ -387,20 +492,23 @@ async function handlePost(path, body = {}) {
   // ---- Chat: add a chaperone ----
   if (/^\/chat\/[^/]+\/chaperone$/.test(p)) {
     const conversationId = p.split("/")[2];
-    const { data: chap } = await supabase.from("profiles").select("id").ilike("email", body.email || "").limit(1);
-    if (!chap || !chap.length) throw new Error("No MatchNest account with that email");
-    const { data: convo } = await supabase.from("conversations").select("*").eq("id", conversationId).single();
-    const chaperones = [...new Set([...(convo.chaperones || []), chap[0].id])];
-    await supabase.from("conversations").update({ chaperones }).eq("id", conversationId);
-    return { message: "Chaperone added", conversation: { ...convo, chaperones } };
+    const { data, error } = await supabase.rpc("add_chaperone_by_email", {
+      target_conversation: conversationId,
+      chaperone_email: body.email || "",
+    });
+    if (error) throw new Error(error.message);
+    return { message: "Chaperone added", conversation: data };
   }
 
 
   // ---- Safety: report ----
   if (p.startsWith("/safety/report/")) {
     const id = p.split("/")[3];
-    const me = await getMe();
-    await supabase.from("reports").insert({ reporter: me.id, reported: id, reason: body.reason || "" });
+    const { error } = await supabase.rpc("create_member_report", {
+      target_user: id,
+      report_reason: body.reason || "",
+    });
+    if (error) throw new Error(error.message);
     return { ok: true };
   }
 
@@ -408,9 +516,10 @@ async function handlePost(path, body = {}) {
   // ---- Safety: block ----
   if (p.startsWith("/safety/block/")) {
     const id = p.split("/")[3];
-    const me = await getMe();
-    const blocked = [...new Set([...(me.blockedUsers || []), id])];
-    await supabase.from("profiles").update({ blocked_users: blocked }).eq("id", me.id);
+    const { error } = await supabase.rpc("block_member", {
+      target_user: id,
+    });
+    if (error) throw new Error(error.message);
     return { ok: true };
   }
 
@@ -418,17 +527,28 @@ async function handlePost(path, body = {}) {
   // ---- Admin moderation ----
   if (p.startsWith("/safety/admin/badge/")) {
     const id = p.split("/")[4];
-    await supabase.from("profiles").update({ badge: !!body.value }).eq("id", id);
+    const { error } = await supabase.rpc("admin_set_badge", {
+      target_user: id,
+      requested_value: !!body.value,
+    });
+    if (error) throw new Error(error.message);
     return { ok: true };
   }
   if (p.startsWith("/safety/admin/suspend/")) {
     const id = p.split("/")[4];
-    await supabase.from("profiles").update({ suspended: true }).eq("id", id);
+    const { error } = await supabase.rpc("admin_set_suspension", {
+      target_user: id,
+      requested_value: true,
+    });
+    if (error) throw new Error(error.message);
     return { ok: true };
   }
   if (p.startsWith("/safety/admin/resolve/")) {
     const id = p.split("/")[4];
-    await supabase.from("reports").update({ status: "resolved" }).eq("id", id);
+    const { error } = await supabase.rpc("admin_resolve_report", {
+      target_report: id,
+    });
+    if (error) throw new Error(error.message);
     return { ok: true };
   }
 
@@ -441,14 +561,13 @@ async function handlePut(path, body = {}) {
   const p = path.split("?")[0];
   // ---- Save profile (builder finish + settings privacy) ----
   if (p === "/profile") {
-    const me = await getMe();
-    const patch = {};
-    if (body.profile !== undefined) patch.profile = body.profile;
-    if (body.photoPrivacy !== undefined) patch.photo_privacy = body.photoPrivacy;
-    patch.profile_complete = true;
-    const { data, error } = await supabase.from("profiles").update(patch).eq("id", me.id).select().single();
+    const { data, error } = await supabase.rpc("update_my_profile", {
+      profile_data: body.profile || {},
+      requested_photo_privacy:
+        body.photoPrivacy === undefined ? null : !!body.photoPrivacy,
+    });
     if (error) throw new Error(error.message);
-    return { user: rowToUser(data) };
+    return { user: await withSignedPhotos(rowToUser(data)) };
   }
   throw new Error(`Unhandled PUT ${path}`);
 }
@@ -461,18 +580,39 @@ async function handleUpload(path, formData) {
     const me = await getMe();
     const file = formData.get("photo");
     if (!file) throw new Error("No file");
-    const ext = (file.name?.split(".").pop() || "jpg").toLowerCase();
-    const key = `${me.id}/${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from("photos").upload(key, file, { upsert: true });
+    const extensionByType = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+    };
+    const ext = extensionByType[file.type];
+    if (!ext) throw new Error("Please upload a JPG, PNG, or WebP image");
+    if (file.size > 10 * 1024 * 1024) {
+      throw new Error("Photo must be smaller than 10 MB");
+    }
+
+    const key = `${me.id}/${crypto.randomUUID()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("photos")
+      .upload(key, file, {
+        upsert: false,
+        cacheControl: "3600",
+        contentType: file.type,
+      });
     if (upErr) throw new Error(upErr.message);
-    const { data: pub } = supabase.storage.from("photos").getPublicUrl(key);
-    const url = pub.publicUrl;
-    const patch = q.main === "true"
-      ? { profile_photo: url }
-      : { photos: [...(me.photos || []), url].slice(0, 5) };
-    const { data, error } = await supabase.from("profiles").update(patch).eq("id", me.id).select().single();
+
+    const currentMain = storedPhotoPath(me.profilePhoto);
+    const currentGallery = (me.photos || []).map(storedPhotoPath).filter(Boolean);
+    const mainPhoto = q.main === "true" ? key : currentMain;
+    const galleryPhotos = q.main === "true"
+      ? currentGallery
+      : [...currentGallery, key].slice(0, 5);
+    const { data, error } = await supabase.rpc("update_my_photos", {
+      main_photo: mainPhoto,
+      gallery_photos: galleryPhotos,
+    });
     if (error) throw new Error(error.message);
-    return { user: rowToUser(data) };
+    return { user: await withSignedPhotos(rowToUser(data)) };
   }
   throw new Error(`Unhandled upload ${path}`);
 }

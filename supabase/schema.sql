@@ -23,7 +23,7 @@ create table if not exists public.profiles (
   profile          jsonb       not null default '{}'::jsonb,
   profile_photo    text,
   photos           jsonb       not null default '[]'::jsonb,
-  verified         boolean     not null default true,     -- demo: accounts start verified
+  verified         boolean     not null default false,    -- granted only after moderation
   badge            boolean     not null default false,
   profile_complete boolean     not null default false,
   photo_privacy    boolean     not null default false,
