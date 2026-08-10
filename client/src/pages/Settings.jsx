@@ -33,9 +33,13 @@ export default function Settings() {
       <div className="card" style={{ marginBottom: 18 }}>
         <h3 style={{ marginTop: 0 }}>Membership</h3>
         <p className="section-sub">
-          You're currently using MatchNest Free. Compare premium plans for more ways to connect.
+          {user.isPremium
+            ? `Your ${user.membership?.plan || "premium"} membership is active.`
+            : "You're currently using MatchNest Free. You can browse profiles, but connections and full messaging require Premium."}
         </p>
-        <button className="btn sm" onClick={() => nav("/plans")}>View subscription plans</button>
+        <button className="btn sm" onClick={() => nav("/plans")}>
+          {user.isPremium ? "Manage membership" : "View subscription plans"}
+        </button>
       </div>
 
       <div className="card" style={{ marginBottom: 18 }}>

@@ -22,6 +22,10 @@ export default function ProfileView() {
   const name = p.profile?.displayName || p.profile?.fullLegalName || p.fullName;
 
   async function connect() {
+    if (!user.isPremium) {
+      nav("/plans");
+      return;
+    }
     const r = await api.post(`/browse/connect/${id}`);
     setMsg(r.status === "accepted" ? "It's a match! You can now chat." : "Connection request sent.");
   }
@@ -55,7 +59,9 @@ export default function ProfileView() {
           </div>
           <div className="spacer" />
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="btn sm" onClick={connect}>Connect</button>
+            <button className="btn sm" onClick={connect}>
+              {user.isPremium ? "Connect" : "Upgrade to connect"}
+            </button>
             <button className="btn ghost sm" onClick={report}>Report</button>
             <button className="btn danger sm" onClick={block}>Block</button>
           </div>

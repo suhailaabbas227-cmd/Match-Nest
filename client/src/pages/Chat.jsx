@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api";
-import { supabase } from "../supabase";
 import { useAuth } from "../AuthContext";
 
 
@@ -14,6 +13,8 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [other, setOther] = useState(null);
+  const [access, setAccess] = useState(user.membership || null);
+  const [sendError, setSendError] = useState("");
   const endRef = useRef(null);
 
 
@@ -29,6 +30,7 @@ export default function Chat() {
     api.get(`/chat/with/${userId}`).then((r) => {
       setConvo(r.conversation);
       setMessages(r.messages);
+      setAccess(r.access);
       const o = conversations.find((c) => c.user?.id === userId)?.user;
       setOther(o || null);
     }).catch(() => {});
@@ -36,30 +38,19 @@ export default function Chat() {
   }, [userId, conversations]);
 
 
-  // Live updates: subscribe to new messages in the open conversation.
+  // Secure polling keeps locked message text on the server. Direct realtime
+  // table payloads are intentionally not used because they could expose text
+  // that a free member has not unlocked.
   useEffect(() => {
-    if (!convo) return;
-    const channel = supabase
-      .channel(`messages:${convo.id}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${convo.id}` },
-        (payload) => {
-          const m = payload.new;
-          const msg = {
-            id: m.id,
-            from: m.from_user,
-            fromName: m.from_name,
-            isChaperone: m.is_chaperone,
-            text: m.text,
-            createdAt: m.created_at,
-          };
-          setMessages((prev) => (prev.some((x) => x.id === msg.id) ? prev : [...prev, msg]));
-        }
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [convo?.id]);
+    if (!convo || !userId) return undefined;
+    const timer = window.setInterval(() => {
+      api.get(`/chat/with/${userId}`).then((r) => {
+        setMessages(r.messages);
+        setAccess(r.access);
+      }).catch(() => {});
+    }, 4000);
+    return () => window.clearInterval(timer);
+  }, [convo?.id, userId]);
 
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
@@ -68,8 +59,16 @@ export default function Chat() {
   async function send(e) {
     e.preventDefault();
     if (!text.trim() || !convo) return;
-    await api.post(`/chat/${convo.id}/message`, { text });
-    setText("");
+    setSendError("");
+    try {
+      await api.post(`/chat/${convo.id}/message`, { text });
+      setText("");
+      const refreshed = await api.get(`/chat/with/${userId}`);
+      setMessages(refreshed.messages);
+      setAccess(refreshed.access);
+    } catch (e) {
+      setSendError(e.message || "Could not send message");
+    }
   }
 
 
@@ -86,6 +85,8 @@ export default function Chat() {
 
 
   const Name = (u) => u?.profile?.displayName || u?.profile?.fullLegalName || u?.fullName || "Member";
+  const freeMessagesRemaining = access?.is_premium ? null : Math.max(0, access?.free_messages_remaining ?? 2);
+  const freeLimitReached = freeMessagesRemaining === 0;
 
 
   return (
@@ -121,18 +122,45 @@ export default function Chat() {
                 )}
               </div>
               <div className="messages">
-                {messages.map((m) => (
-                  <div key={m.id}
-                    className={`msg ${m.isChaperone ? "chap" : m.from === user.id ? "mine" : "theirs"}`}>
-                    {m.from !== user.id && <div className="who">{m.fromName}{m.isChaperone ? " (chaperone)" : ""}</div>}
-                    {m.text}
-                  </div>
-                ))}
+                {messages.map((m) => {
+                  const kind = m.isChaperone ? "chap" : m.from === user.id ? "mine" : "theirs";
+                  return (
+                    <div key={m.id} className={`msg ${kind} ${m.locked ? "locked" : ""}`}>
+                      {m.from !== user.id && <div className="who">{m.fromName}{m.isChaperone ? " (chaperone)" : ""}</div>}
+                      {m.locked ? (
+                        <div className="locked-message">
+                          <div className="locked-preview" aria-hidden="true">This message is waiting for you</div>
+                          <div className="locked-overlay">
+                            <b>🔒 Premium message</b>
+                            <span>Upgrade to read and continue the conversation.</span>
+                            <button type="button" onClick={() => nav("/plans")}>View plans</button>
+                          </div>
+                        </div>
+                      ) : m.text}
+                    </div>
+                  );
+                })}
                 <div ref={endRef} />
               </div>
+              {!access?.is_premium && (
+                <div className="free-chat-limit">
+                  <b>Free plan:</b> {freeMessagesRemaining} of 2 messages remaining.
+                  {freeLimitReached && <button type="button" onClick={() => nav("/plans")}>Upgrade</button>}
+                </div>
+              )}
+              {sendError && <div className="error chat-error" role="alert">{sendError}</div>}
               <form className="chat-input" onSubmit={send}>
-                <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a respectful message…" />
-                <button className="btn">Send</button>
+                <input
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder={freeLimitReached ? "Upgrade to continue messaging" : "Type a respectful message…"}
+                  disabled={freeLimitReached}
+                />
+                {freeLimitReached ? (
+                  <button className="btn" type="button" onClick={() => nav("/plans")}>Upgrade</button>
+                ) : (
+                  <button className="btn">Send</button>
+                )}
               </form>
             </>
           )}

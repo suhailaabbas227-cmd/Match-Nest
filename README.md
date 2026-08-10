@@ -11,7 +11,7 @@ security functions, and MatchNest branding. See `mobile/README.md` for setup.
 - React, Vite, and React Router
 - Supabase Authentication
 - Supabase Postgres with Row Level Security
-- Supabase Realtime for chat
+- Supabase-backed secure chat with server-side message access controls
 - Supabase Storage for profile photos
 - Netlify hosting
 
@@ -38,6 +38,7 @@ before connecting the public frontend:
 2. `supabase/moderation.sql`
 3. `supabase/phase1_security.sql`
 4. `supabase/account_lifecycle.sql`
+5. `supabase/freemium_access.sql`
 
 The Phase 1 migration is required. It separates private account data, enforces
 18+ access, protects matching and chat actions with database functions, and
@@ -53,6 +54,13 @@ supabase functions deploy delete-account
 
 The function uses Supabase's server-managed service-role environment variable;
 never copy that key into the web or mobile frontend.
+
+The freemium migration adds subscription state and enforces free-account
+limits at the database boundary: browsing remains available, new connection
+requests require Premium, free members may send two messages total, and only
+the first incoming message in each conversation is returned unmasked. Direct
+message-table reads are removed so locked text cannot be recovered from the
+browser.
 
 Existing accounts that did not previously save a date of birth are sent to a
 one-time private age-confirmation screen.

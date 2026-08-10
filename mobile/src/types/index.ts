@@ -1,5 +1,13 @@
 export type MatchMode = "dating" | "marriage";
 
+export type Membership = {
+  isPremium: boolean;
+  status: "free" | "active" | "inactive" | "expired" | "cancelled";
+  plan: "silver" | "gold" | "platinum" | "diamond" | null;
+  freeMessagesSent: number;
+  freeMessagesRemaining: number | null;
+};
+
 export type Profile = {
   id: string;
   email: string;
@@ -13,6 +21,7 @@ export type Profile = {
   suspended: boolean;
   deactivatedAt: string;
   verified: boolean;
+  membership: Membership;
 };
 
 export type RootStackParamList = {

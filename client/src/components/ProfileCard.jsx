@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../AuthContext";
 
 export default function ProfileCard({ p, onConnect, status }) {
   const nav = useNavigate();
+  const { user } = useAuth();
   const name = p.profile?.displayName || p.profile?.fullLegalName || p.fullName;
   const photo = p.profilePhoto;
   const blurred = p.photosBlurred;
@@ -30,6 +32,8 @@ export default function ProfileCard({ p, onConnect, status }) {
             <button className="btn secondary sm" onClick={() => nav(`/chat/${p.id}`)}>Message</button>
           ) : status === "pending" ? (
             <button className="btn ghost sm" disabled>Request sent</button>
+          ) : !user?.isPremium ? (
+            <button className="btn sm" onClick={() => nav("/plans")}>Upgrade to connect</button>
           ) : (
             <button className="btn sm" onClick={() => onConnect(p.id)}>Connect</button>
           )}

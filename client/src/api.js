@@ -29,6 +29,13 @@ const photoUrlCache = new Map();
 // ---------------------------------------------------------------------------
 export function rowToUser(r) {
   if (!r) return null;
+  const membership = r.membership || {
+    is_premium: false,
+    status: "free",
+    plan: null,
+    free_messages_sent: 0,
+    free_messages_remaining: 2,
+  };
   return {
     id: r.id,
     role: r.role || "user",
@@ -49,6 +56,8 @@ export function rowToUser(r) {
     photoPrivacy: r.photo_privacy ?? false,
     blockedUsers: r.blocked_users || [],
     suspended: r.suspended ?? false,
+    membership,
+    isPremium: membership.is_premium === true,
     createdAt: r.created_at,
   };
 }
@@ -269,6 +278,20 @@ async function fetchProfiles(ids) {
   return map;
 }
 
+async function getMyMembership() {
+  const { data, error } = await supabase.rpc("get_my_membership");
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+async function getConversationMessages(conversationId) {
+  const { data, error } = await supabase.rpc("get_conversation_messages", {
+    target_conversation: conversationId,
+  });
+  if (error) throw new Error(error.message);
+  return (data || []).map(mapMessage);
+}
+
 
 // ---------------------------------------------------------------------------
 // Path handlers — each returns the same JSON the old API returned.
@@ -279,6 +302,8 @@ async function handleGet(path) {
 
 
   if (p === "/auth/me") return { user: await getMe() };
+
+  if (p === "/membership") return { membership: await getMyMembership() };
 
 
   // ---- Browse list ----
@@ -372,14 +397,13 @@ async function handleGet(path) {
     const out = [];
     for (const c of convos) {
       const otherId = (c.participants || []).find((x) => x !== me.id) || c.participants?.[0];
-      const { data: msgs } = await supabase.from("messages").select("text,created_at")
-        .eq("conversation_id", c.id).order("created_at", { ascending: false }).limit(1);
-      const last = msgs?.[0];
+      const msgs = await getConversationMessages(c.id);
+      const last = msgs.at(-1);
       out.push({
         id: c.id,
         user: publicView(map[otherId], true),
-        lastMessage: last?.text || null,
-        lastAt: last?.created_at || c.created_at,
+        lastMessage: last?.locked ? "Premium message" : last?.text || null,
+        lastAt: last?.createdAt || c.created_at,
         chaperones: c.chaperones || [],
       });
     }
@@ -395,11 +419,11 @@ async function handleGet(path) {
     const accepted = await myAcceptedIds(me.id);
     if (!accepted.has(otherId)) throw new Error("You can only chat with matched users");
     const convo = await getOrCreateConversation(otherId);
-    const { data: msgs, error } = await supabase.from("messages").select("*")
-      .eq("conversation_id", convo.id).order("created_at", { ascending: true });
-    if (error) throw new Error(error.message);
-    const messages = (msgs || []).map(mapMessage);
-    return { conversation: convo, messages };
+    const [messages, access] = await Promise.all([
+      getConversationMessages(convo.id),
+      getMyMembership(),
+    ]);
+    return { conversation: convo, messages, access };
   }
 
 
@@ -435,6 +459,7 @@ function mapMessage(m) {
     fromName: m.from_name,
     isChaperone: m.is_chaperone,
     text: m.text,
+    locked: m.locked ?? false,
     createdAt: m.created_at,
   };
 }
