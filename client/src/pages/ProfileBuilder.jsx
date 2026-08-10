@@ -51,13 +51,21 @@ export default function ProfileBuilder() {
   const current = steps[step];
 
   function nextStep() {
-    // light validation: required fields in this section must be filled
+    // Required profile details must be completed before moving forward.
     if (!onPhotoStep) {
       const missing = current.fields.filter(
         (f) => f.required && !String(data[f.name] ?? "").trim()
       );
       if (missing.length) {
         setErr(`Please fill in: ${missing.map((f) => f.label).join(", ")}`);
+        return;
+      }
+
+      const tooShort = current.fields.find(
+        (f) => f.minLength && String(data[f.name] ?? "").trim().length < f.minLength
+      );
+      if (tooShort) {
+        setErr(`${tooShort.label} must be at least ${tooShort.minLength} characters.`);
         return;
       }
     }
@@ -99,13 +107,11 @@ export default function ProfileBuilder() {
       </header>
 
       <div className="ob-wrap">
-        <div className="ob-head">
+        <div className={`ob-head ${marriage ? "" : "no-subtitle"}`}>
           <h1>{marriage ? "Build your marriage profile" : "Set up your dating profile"}</h1>
-          <p>
-            {marriage
-              ? "A complete profile helps families and matches get to know you properly."
-              : "Keep it short and real — just enough to make a genuine connection."}
-          </p>
+          {marriage && (
+            <p>A complete profile helps families and matches get to know you properly.</p>
+          )}
         </div>
 
         {/* progress */}
@@ -122,7 +128,6 @@ export default function ProfileBuilder() {
           {!onPhotoStep ? (
             <>
               <h2>{current.title}</h2>
-              <p className="hint">All fields are optional — fill in what you're comfortable sharing.</p>
               <div className="ob-grid">
                 {current.fields.map((fld) => {
                   const wide = ["textarea", "tags", "prompts"].includes(fld.type);
@@ -131,12 +136,24 @@ export default function ProfileBuilder() {
                       <label>{fld.label}{fld.required && <span className="req"> *</span>}</label>
 
                       {fld.type === "select" ? (
-                        <select value={data[fld.name] || ""} onChange={set(fld.name)}>
+                        <select
+                          value={data[fld.name] || ""}
+                          onChange={set(fld.name)}
+                          required={fld.required}
+                          aria-required={fld.required || undefined}
+                        >
                           <option value="">Select…</option>
                           {fld.options.map((o) => <option key={o}>{o}</option>)}
                         </select>
                       ) : fld.type === "textarea" ? (
-                        <textarea value={data[fld.name] || ""} onChange={set(fld.name)} placeholder={fld.placeholder || "Write a few lines…"} />
+                        <textarea
+                          value={data[fld.name] || ""}
+                          onChange={set(fld.name)}
+                          placeholder={fld.placeholder || "Write a few lines…"}
+                          required={fld.required}
+                          minLength={fld.minLength}
+                          aria-required={fld.required || undefined}
+                        />
                       ) : fld.type === "tags" ? (
                         <div className="ob-tags">
                           {fld.options.map((o) => {
@@ -169,7 +186,14 @@ export default function ProfileBuilder() {
                           })}
                         </div>
                       ) : (
-                        <input type={fld.type} value={data[fld.name] || ""} onChange={set(fld.name)} />
+                        <input
+                          type={fld.type}
+                          value={data[fld.name] || ""}
+                          onChange={set(fld.name)}
+                          required={fld.required}
+                          minLength={fld.minLength}
+                          aria-required={fld.required || undefined}
+                        />
                       )}
                     </div>
                   );

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { confirmDateOfBirth } from "../api";
 import { useAuth } from "../AuthContext";
+import "./AgeCheck.css";
 
 export default function AgeCheck() {
   const navigate = useNavigate();
@@ -32,10 +33,10 @@ export default function AgeCheck() {
   }
 
   return (
-    <div className="center-screen">
-      <div className="card auth-card">
+    <div className="center-screen age-check-page">
+      <div className="card auth-card age-check-card">
         <div className="auth-head">
-          <div className="brand">Match<span>Nest</span></div>
+          <div className="brand age-check-brand"><span>Match</span><strong>Nest</strong></div>
           <h2>Confirm you are 18+</h2>
           <p>
             MatchNest is only for adults. Your exact date of birth is kept
@@ -53,12 +54,12 @@ export default function AgeCheck() {
             required
           />
           {error && <div className="error" role="alert" aria-live="assertive">{error}</div>}
-          <button className="btn" style={{ marginTop: 18 }} disabled={busy}>
+          <button className="btn age-check-primary" style={{ marginTop: 18 }} disabled={busy}>
             {busy ? "Confirming…" : "Confirm age"}
           </button>
         </form>
 
-        <button className="btn ghost" style={{ marginTop: 10 }} onClick={logout}>
+        <button className="btn ghost age-check-ghost" style={{ marginTop: 10 }} onClick={logout}>
           Log out
         </button>
       </div>

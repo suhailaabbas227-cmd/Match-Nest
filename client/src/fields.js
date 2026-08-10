@@ -88,9 +88,9 @@ export const datingSteps = [
   {
     title: "Lifestyle & Faith",
     fields: [
-      sel("education", "Education", EDUCATION),
+      sel("education", "Education", EDUCATION, { required: true }),
       t("occupation", "Occupation"),
-      sel("maritalStatus", "Marital Status", MARITAL),
+      sel("maritalStatus", "Marital Status", MARITAL, { required: true }),
       sel("sect", "Sect", SECTS),
       sel("religiosity", "How Practicing Are You?", RELIGIOSITY),
       sel("pray", "Do You Pray?", PRAY),
@@ -99,15 +99,19 @@ export const datingSteps = [
   {
     title: "Interests & Bio",
     fields: [
-      tags("interests", "Your Interests (pick a few)", INTERESTS),
+      tags("interests", "Your Interests", INTERESTS),
       sel("relationshipGoal", "What Are You Looking For?", RELATIONSHIP_GOAL, { required: true }),
-      area("aboutMe", "About You", { placeholder: "A few real lines about who you are…" }),
+      area("aboutMe", "About You", {
+        placeholder: "A few real lines about who you are…",
+        required: true,
+        minLength: 20,
+      }),
     ],
   },
   {
     title: "Icebreakers",
     fields: [
-      prompts("icebreakers", "Pick a few prompts and answer them", DATING_PROMPTS, 3),
+      prompts("icebreakers", "Share what others should know before reaching out", DATING_PROMPTS, 3),
     ],
   },
 ];
@@ -147,7 +151,7 @@ export const marriageSteps = [
   {
     title: "Education & Career",
     fields: [
-      sel("education", "Highest Education", EDUCATION),
+      sel("education", "Highest Education", EDUCATION, { required: true }),
       t("fieldOfStudy", "Field of Study"),
       t("occupation", "Occupation"),
       t("income", "Annual Income (optional)"),
@@ -184,8 +188,12 @@ export const marriageSteps = [
     title: "About & Icebreakers",
     fields: [
       tags("interests", "Your Interests", INTERESTS),
-      area("biodataNote", "About You", { placeholder: "Tell potential matches and their families about yourself…" }),
-      prompts("icebreakers", "Pick a few prompts and answer them", MARRIAGE_PROMPTS, 3),
+      area("biodataNote", "About You", {
+        placeholder: "Tell potential matches and their families about yourself…",
+        required: true,
+        minLength: 20,
+      }),
+      prompts("icebreakers", "Share what others should know before reaching out", MARRIAGE_PROMPTS, 3),
     ],
   },
 ];
