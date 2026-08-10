@@ -3,14 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { getMe, signInUser, signUpUser } from "../api";
 import "./Signup.css";
 
-function dateYearsAgo(years) {
-  const value = new Date();
-  value.setFullYear(value.getFullYear() - years);
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  const day = String(value.getDate()).padStart(2, "0");
-  return `${value.getFullYear()}-${month}-${day}`;
-}
-
 function Logo() {
   return (
     <div className="hs-logo">
@@ -169,7 +161,7 @@ export default function Signup() {
             <button className={tab === "login" ? "on" : ""} onClick={() => { setTab("login"); setErr(""); }}>Login</button>
           </div>
 
-          {err && <div className="hs-err">{err}</div>}
+          {err && <div className="hs-err" role="alert" aria-live="assertive">{err}</div>}
           {confirmationEmail && (
             <div className="success" role="status">
               <b>Check your email.</b><br />
@@ -199,11 +191,8 @@ export default function Signup() {
                   type="date"
                   value={f.dateOfBirth}
                   onChange={set("dateOfBirth")}
-                  min={dateYearsAgo(120)}
-                  max={dateYearsAgo(18)}
                   required
                   aria-label="Date of birth"
-                  title="You must be at least 18 years old"
                 />
               </div>
               <p className="hs-age-note">MatchNest is for adults aged 18 and over only.</p>

@@ -56,9 +56,27 @@ export function rowToUser(r) {
 
 function ageFromDob(dob) {
   if (!dob) return null;
-  const d = new Date(dob);
-  if (isNaN(d)) return null;
-  return Math.floor((Date.now() - d.getTime()) / (365.25 * 24 * 3600 * 1000));
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dob);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  if (
+    Number.isNaN(date.getTime())
+    || date.getFullYear() !== year
+    || date.getMonth() !== month - 1
+    || date.getDate() !== day
+  ) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - year;
+  if (
+    today.getMonth() < month - 1
+    || (today.getMonth() === month - 1 && today.getDate() < day)
+  ) age -= 1;
+  return age;
 }
 
 function storedPhotoPath(value) {
@@ -166,7 +184,7 @@ export async function signUpUser({ fullName, email, password, dateOfBirth, mode 
   const age = ageFromDob(dateOfBirth);
   if (age == null) return { error: "Please enter a valid date of birth." };
   if (age < 18) {
-    return { error: "You must be at least 18 years old to use MatchNest." };
+    return { error: "Sorry, you must be at least 18 years old to use MatchNest." };
   }
   if (age > 120) return { error: "Please enter a valid date of birth." };
 
@@ -213,9 +231,8 @@ export async function updatePassword(password) {
 
 export async function confirmDateOfBirth(dateOfBirth) {
   const age = ageFromDob(dateOfBirth);
-  if (age == null || age < 18 || age > 120) {
-    return { error: "You must be at least 18 years old to use MatchNest." };
-  }
+  if (age == null || age > 120) return { error: "Please enter a valid date of birth." };
+  if (age < 18) return { error: "Sorry, you must be at least 18 years old to use MatchNest." };
 
   const { data, error } = await supabase.rpc("confirm_my_date_of_birth", {
     requested_dob: dateOfBirth,

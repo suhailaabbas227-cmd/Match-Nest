@@ -3,14 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { confirmDateOfBirth } from "../api";
 import { useAuth } from "../AuthContext";
 
-function dateYearsAgo(years) {
-  const value = new Date();
-  value.setFullYear(value.getFullYear() - years);
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  const day = String(value.getDate()).padStart(2, "0");
-  return `${value.getFullYear()}-${month}-${day}`;
-}
-
 export default function AgeCheck() {
   const navigate = useNavigate();
   const { setUser, logout } = useAuth();
@@ -58,11 +50,9 @@ export default function AgeCheck() {
             type="date"
             value={dateOfBirth}
             onChange={(event) => setDateOfBirth(event.target.value)}
-            min={dateYearsAgo(120)}
-            max={dateYearsAgo(18)}
             required
           />
-          {error && <div className="error">{error}</div>}
+          {error && <div className="error" role="alert" aria-live="assertive">{error}</div>}
           <button className="btn" style={{ marginTop: 18 }} disabled={busy}>
             {busy ? "Confirming…" : "Confirm age"}
           </button>

@@ -1,0 +1,74 @@
+import { supabase } from "./supabase";
+
+export function ageFromDateOfBirth(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const dob = new Date(year, month - 1, day);
+  if (
+    Number.isNaN(dob.getTime()) ||
+    dob.getFullYear() !== year ||
+    dob.getMonth() !== month - 1 ||
+    dob.getDate() !== day
+  ) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - year;
+  if (
+    today.getMonth() < month - 1 ||
+    (today.getMonth() === month - 1 && today.getDate() < day)
+  ) age -= 1;
+  return age;
+}
+
+export async function signUp(input: {
+  fullName: string;
+  email: string;
+  password: string;
+  dateOfBirth: string;
+}) {
+  const age = ageFromDateOfBirth(input.dateOfBirth);
+  if (age === null || age > 120) throw new Error("Enter your date of birth as YYYY-MM-DD.");
+  if (age < 18) throw new Error("You must be at least 18 years old to use MatchNest.");
+  if (input.password.length < 8) throw new Error("Password must contain at least 8 characters.");
+
+  const { data, error } = await supabase.auth.signUp({
+    email: input.email.trim().toLowerCase(),
+    password: input.password,
+    options: {
+      emailRedirectTo: "matchnest://auth/callback",
+      data: {
+        full_name: input.fullName.trim(),
+        date_of_birth: input.dateOfBirth,
+        mode: "",
+      },
+    },
+  });
+  if (error) throw new Error(error.message);
+  return { needsEmailConfirmation: !data.session };
+}
+
+export async function signIn(email: string, password: string) {
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email.trim().toLowerCase(),
+    password,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function requestPasswordReset(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    email.trim().toLowerCase(),
+    { redirectTo: "matchnest://reset-password" },
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function updatePassword(password: string) {
+  if (password.length < 8) throw new Error("Password must contain at least 8 characters.");
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw new Error(error.message);
+}
