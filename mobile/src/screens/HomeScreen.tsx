@@ -43,6 +43,11 @@ export function HomeScreen({ navigation }: Props) {
       </View>
       <Text style={styles.nextCopy}>These four native sections are the next MatchNest mobile milestone.</Text>
       <Button
+        label="View subscription plans"
+        onPress={() => navigation.navigate("Plans")}
+        style={styles.plans}
+      />
+      <Button
         label="Account settings"
         variant="secondary"
         onPress={() => navigation.navigate("AccountSettings")}
@@ -69,6 +74,7 @@ const styles = StyleSheet.create({
   featureTitle: { color: colors.text, fontSize: 16, fontWeight: "900" },
   featureCopy: { color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 7 },
   nextCopy: { color: colors.muted, fontSize: 13, lineHeight: 20, textAlign: "center", marginTop: 18 },
-  settings: { marginTop: 26 },
+  plans: { marginTop: 26 },
+  settings: { marginTop: 10 },
   logout: { marginTop: 10 },
 });

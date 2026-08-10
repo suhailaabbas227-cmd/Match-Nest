@@ -21,5 +21,6 @@ export type RootStackParamList = {
   Login: undefined;
   ForgotPassword: undefined;
   Home: undefined;
+  Plans: undefined;
   AccountSettings: undefined;
 };

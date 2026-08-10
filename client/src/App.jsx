@@ -15,6 +15,7 @@ import Matches from "./pages/Matches";
 import Chat from "./pages/Chat";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
+import SubscriptionPlans from "./pages/SubscriptionPlans";
 
 // Gate that also routes the user to the correct onboarding step.
 function Protected({ children }) {
@@ -99,6 +100,7 @@ export default function App() {
         <Route path="/chat" element={<Protected><Chat /></Protected>} />
         <Route path="/chat/:userId" element={<Protected><Chat /></Protected>} />
         <Route path="/settings" element={<Protected><Settings /></Protected>} />
+        <Route path="/plans" element={<Protected><SubscriptionPlans /></Protected>} />
         <Route path="/admin" element={<Protected><Admin /></Protected>} />
 
         <Route path="*" element={<Navigate to={user ? "/" : "/signup"} replace />} />

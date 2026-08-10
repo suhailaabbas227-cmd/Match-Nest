@@ -31,6 +31,14 @@ export default function Settings() {
       <p className="section-sub">Manage your account, mode and privacy.</p>
 
       <div className="card" style={{ marginBottom: 18 }}>
+        <h3 style={{ marginTop: 0 }}>Membership</h3>
+        <p className="section-sub">
+          You're currently using MatchNest Free. Compare premium plans for more ways to connect.
+        </p>
+        <button className="btn sm" onClick={() => nav("/plans")}>View subscription plans</button>
+      </div>
+
+      <div className="card" style={{ marginBottom: 18 }}>
         <h3 style={{ marginTop: 0 }}>Account</h3>
         <div className="list-row"><b>Name</b><div className="spacer" />{user.fullName}</div>
         <div className="list-row"><b>Email</b><div className="spacer" />{user.email}</div>

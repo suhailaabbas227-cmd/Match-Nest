@@ -160,6 +160,19 @@ th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--line); 
 th { color: var(--muted); font-size: 12px; text-transform: uppercase; }
 
 @media (max-width: 720px) {
+  .nav { flex-wrap: wrap; gap: 10px; padding: 10px 14px; }
+  .nav .links {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    padding-bottom: 3px;
+    gap: 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav .links::-webkit-scrollbar { display: none; }
+  .nav .links a, .nav .links .btn { flex: 0 0 auto; }
+  .mode-pill { margin-left: auto; }
   .modes, .row, .row-3 { grid-template-columns: 1fr; }
   .chat-wrap { grid-template-columns: 1fr; height: auto; }
 }
