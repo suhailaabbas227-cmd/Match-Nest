@@ -39,6 +39,7 @@ before connecting the public frontend:
 3. `supabase/phase1_security.sql`
 4. `supabase/account_lifecycle.sql`
 5. `supabase/freemium_access.sql`
+6. `supabase/trust_and_discovery.sql`
 
 The Phase 1 migration is required. It separates private account data, enforces
 18+ access, protects matching and chat actions with database functions, and
@@ -61,6 +62,39 @@ requests require Premium, free members may send two messages total, and only
 the first incoming message in each conversation is returned unmasked. Direct
 message-table reads are removed so locked text cannot be recovered from the
 browser.
+
+The trust and discovery migration adds database-enforced photo approval,
+premium-private incoming requests, in-app notifications, email-ready events,
+and strong-match suggestions. It also removes direct connection-table reads so
+a free member cannot recover a blurred like identity through browser tools.
+
+## Photo moderation and notification email
+
+Deploy the photo moderation function and private email queue worker after
+applying `trust_and_discovery.sql`:
+
+```powershell
+supabase functions deploy moderate-photo
+supabase functions deploy dispatch-notification-emails --no-verify-jwt
+```
+
+Configure these server-only Supabase Edge Function secrets:
+
+- `SIGHTENGINE_API_USER`
+- `SIGHTENGINE_API_SECRET`
+- `RESEND_API_KEY`
+- `NOTIFICATION_FROM_EMAIL` (a verified sender)
+- `NOTIFICATION_CRON_SECRET` (a long random server secret)
+- `APP_URL` (for example `https://matchnests.netlify.app`)
+
+Without Sightengine credentials, new photos remain private in the manual admin
+review queue and are never published. Rejected nudity or high-confidence
+AI-generated images are removed. Without email provider credentials, in-app
+notifications still work and email events remain queued. Private message text
+is never included in notification email.
+
+Schedule `dispatch-notification-emails` from a trusted server or Supabase Cron
+using the `x-cron-secret` header. Never expose that secret in web or mobile.
 
 Existing accounts that did not previously save a date of birth are sent to a
 one-time private age-confirmation screen.

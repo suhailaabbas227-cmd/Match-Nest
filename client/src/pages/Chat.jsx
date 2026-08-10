@@ -83,6 +83,29 @@ export default function Chat() {
     }
   }
 
+  async function reportConversation() {
+    if (!userId) return;
+    const reason = prompt("What happened in this conversation? Please include enough detail for our safety team.");
+    if (!reason) return;
+    try {
+      await api.post(`/safety/report/${userId}`, { reason: `Chat report: ${reason}` });
+      alert("Report submitted. Our safety team can review this account.");
+    } catch (e) {
+      alert(e.message || "Could not submit report");
+    }
+  }
+
+  async function blockConversation() {
+    if (!userId || !confirm("Block this member? Messaging will stop and you will no longer see each other.")) return;
+    try {
+      await api.post(`/safety/block/${userId}`);
+      nav("/chat");
+      window.location.reload();
+    } catch (e) {
+      alert(e.message || "Could not block this member");
+    }
+  }
+
 
   const Name = (u) => u?.profile?.displayName || u?.profile?.fullLegalName || u?.fullName || "Member";
   const freeMessagesRemaining = access?.is_premium ? null : Math.max(0, access?.free_messages_remaining ?? 2);
@@ -120,6 +143,8 @@ export default function Chat() {
                     👪 Add Chaperone
                   </button>
                 )}
+                <button className="btn ghost sm" onClick={reportConversation}>Report</button>
+                <button className="btn danger sm" onClick={blockConversation}>Block</button>
               </div>
               <div className="messages">
                 {messages.map((m) => {

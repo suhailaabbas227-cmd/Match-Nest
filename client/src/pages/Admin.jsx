@@ -7,14 +7,17 @@ export default function Admin() {
   const { user } = useAuth();
   const [reports, setReports] = useState([]);
   const [users, setUsers] = useState([]);
+  const [photoReviews, setPhotoReviews] = useState([]);
 
   async function load() {
-    const [{ reports }, { users }] = await Promise.all([
+    const [{ reports }, { users }, { reviews }] = await Promise.all([
       api.get("/safety/admin/reports"),
       api.get("/safety/admin/users"),
+      api.get("/safety/admin/photo-reviews"),
     ]);
     setReports(reports);
     setUsers(users);
+    setPhotoReviews(reviews);
   }
   useEffect(() => { if (user?.role === "admin") load(); }, [user]);
 
@@ -25,6 +28,10 @@ export default function Admin() {
   async function grant(id, value) { await api.post(`/safety/admin/badge/${id}`, { value }); load(); }
   async function suspend(id) { await api.post(`/safety/admin/suspend/${id}`); load(); }
   async function resolve(id) { await api.post(`/safety/admin/resolve/${id}`); load(); }
+  async function reviewPhoto(path, status) {
+    await api.post("/safety/admin/photo-review", { path, status });
+    load();
+  }
 
   return (
     <div className="container">
@@ -51,6 +58,27 @@ export default function Admin() {
               ))}
             </tbody>
           </table>
+        )}
+      </div>
+
+      <div className="card" style={{ marginBottom: 18 }}>
+        <h3 style={{ marginTop: 0 }}>Photo safety review {photoReviews.length > 0 && `(${photoReviews.length})`}</h3>
+        {photoReviews.length === 0 ? <p className="section-sub">No photos waiting for review.</p> : (
+          <div className="photo-review-grid">
+            {photoReviews.map((review) => (
+              <div className="photo-review-card" key={review.path}>
+                {review.photoUrl
+                  ? <img src={review.photoUrl} alt="Profile photo awaiting safety review" />
+                  : <div className="photo-review-missing">Preview unavailable</div>}
+                <strong>{review.is_main ? "Main photo" : "Gallery photo"} — {review.status === "review" ? "needs a decision" : "pending review"}</strong>
+                <small>{review.reason}</small>
+                <div className="btn-row">
+                  <button className="btn sm" onClick={() => reviewPhoto(review.path, "approved")}>Approve</button>
+                  <button className="btn danger sm" onClick={() => reviewPhoto(review.path, "rejected")}>Reject</button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

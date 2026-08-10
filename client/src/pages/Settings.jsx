@@ -70,6 +70,12 @@ export default function Settings() {
             checked={!!user.photoPrivacy} onChange={togglePrivacy} />
           Blur my photos until I accept a match
         </label>
+        <p className="section-sub" style={{ margin: "14px 0 0" }}>
+          MatchNest does not request GPS or show your exact location. Only the city/location you choose for your profile is shared.
+        </p>
+        <p className="section-sub" style={{ margin: "8px 0 0" }}>
+          Free members cannot reveal who liked or messaged them from notifications; private message text is never placed in email alerts.
+        </p>
         {msg && <div className="success">{msg}</div>}
         <div style={{ marginTop: 16 }}>
           <button className="btn ghost sm" onClick={() => nav("/build")}>Edit my profile</button>

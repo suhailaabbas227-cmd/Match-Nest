@@ -254,13 +254,20 @@ export async function confirmDateOfBirth(dateOfBirth) {
 // ---------------------------------------------------------------------------
 // Connections helpers.
 // ---------------------------------------------------------------------------
-async function myAcceptedIds(meId) {
-  const { data } = await supabase
-    .from("connections").select("from_user,to_user,status")
-    .eq("status", "accepted").or(`from_user.eq.${meId},to_user.eq.${meId}`);
-  const set = new Set();
-  (data || []).forEach((c) => set.add(c.from_user === meId ? c.to_user : c.from_user));
-  return set;
+async function myAcceptedIds() {
+  const { data, error } = await supabase.rpc("get_my_connections", {
+    requested_kind: "accepted",
+  });
+  if (error) throw new Error(error.message);
+  return new Set((data || []).map((c) => c.other_user).filter(Boolean));
+}
+
+async function getMyConnections(kind) {
+  const { data, error } = await supabase.rpc("get_my_connections", {
+    requested_kind: kind,
+  });
+  if (error) throw new Error(error.message);
+  return data || [];
 }
 
 
@@ -321,6 +328,7 @@ async function handleGet(path) {
       .map(rowToUser)
       .filter((u) => {
         const pr = u.profile || {};
+        if (!isMutualGenderPreference(me, u)) return false;
         if (q.city && !`${u.city} ${pr.city || ""}`.toLowerCase().includes(q.city.toLowerCase())) return false;
         if (q.sect && (pr.sect || "").toLowerCase() !== q.sect.toLowerCase()) return false;
         if (q.religiosity && (pr.religiosity || "").toLowerCase() !== q.religiosity.toLowerCase()) return false;
@@ -333,7 +341,15 @@ async function handleGet(path) {
         }
         return true;
       })
-      .map((u) => publicView(u, accepted.has(u.id)));
+      .map((u) => {
+        const match = compatibilityFor(me, u);
+        return {
+          ...publicView(u, accepted.has(u.id)),
+          matchScore: match.score,
+          matchReasons: match.reasons,
+        };
+      })
+      .sort((a, b) => b.matchScore - a.matchScore);
     const profiles = await Promise.all(filtered.map(withSignedPhotos));
     return { profiles };
   }
@@ -341,14 +357,12 @@ async function handleGet(path) {
 
   // ---- My matches ----
   if (p === "/browse/me/matches") {
-    const me = await getMe();
-    const { data } = await supabase.from("connections").select("*")
-      .eq("status", "accepted").or(`from_user.eq.${me.id},to_user.eq.${me.id}`);
-    const others = (data || []).map((c) => (c.from_user === me.id ? c.to_user : c.from_user));
+    const data = await getMyConnections("accepted");
+    const others = data.map((c) => c.other_user).filter(Boolean);
     const map = await fetchProfiles(others);
-    const matches = (data || []).map((c) => {
-      const otherId = c.from_user === me.id ? c.to_user : c.from_user;
-      return { connId: c.id, user: publicView(map[otherId], true) };
+    const matches = data.map((c) => {
+      const otherId = c.other_user;
+      return { connId: c.connection_id, user: publicView(map[otherId], true) };
     }).filter((m) => m.user);
     return { matches };
   }
@@ -356,12 +370,31 @@ async function handleGet(path) {
 
   // ---- Incoming requests ----
   if (p === "/browse/me/requests") {
-    const me = await getMe();
-    const { data } = await supabase.from("connections").select("*")
-      .eq("to_user", me.id).eq("status", "pending");
-    const map = await fetchProfiles((data || []).map((c) => c.from_user));
-    const requests = (data || []).map((c) => ({ connId: c.id, user: publicView(map[c.from_user], false) })).filter((r) => r.user);
+    const data = await getMyConnections("incoming");
+    const visible = data.filter((c) => !c.locked && c.other_user);
+    const map = await fetchProfiles(visible.map((c) => c.other_user));
+    const requests = data.map((c) => c.locked
+      ? { locked: true }
+      : { connId: c.connection_id, locked: false, user: publicView(map[c.other_user], false) }
+    ).filter((r) => r.locked || r.user);
     return { requests };
+  }
+
+  if (p === "/browse/me/outgoing") {
+    const data = await getMyConnections("outgoing");
+    return {
+      outgoing: data.map((c) => ({
+        connId: c.connection_id,
+        userId: c.other_user,
+        status: c.status,
+      })),
+    };
+  }
+
+  if (p === "/notifications") {
+    const { data, error } = await supabase.rpc("get_my_notifications");
+    if (error) throw new Error(error.message);
+    return { notifications: data || [] };
   }
 
 
@@ -376,7 +409,13 @@ async function handleGet(path) {
       .single();
     if (error) throw new Error("Profile not found");
     const accepted = await myAcceptedIds(me.id);
-    const profile = publicView(rowToUser(data), accepted.has(id));
+    const candidate = rowToUser(data);
+    const match = compatibilityFor(me, candidate);
+    const profile = {
+      ...publicView(candidate, accepted.has(id)),
+      matchScore: match.score,
+      matchReasons: match.reasons,
+    };
     return { profile: await withSignedPhotos(profile) };
   }
 
@@ -445,6 +484,19 @@ async function handleGet(path) {
     }));
     return { reports };
   }
+  if (p === "/safety/admin/photo-reviews") {
+    const { data, error } = await supabase
+      .from("photo_reviews")
+      .select("path,user_id,is_main,status,reason,provider,created_at")
+      .in("status", ["pending", "review"])
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    const reviews = await Promise.all((data || []).map(async (review) => ({
+      ...review,
+      photoUrl: await signedPhotoUrl(review.path),
+    })));
+    return { reviews };
+  }
 
 
   throw new Error(`Unhandled GET ${path}`);
@@ -462,6 +514,100 @@ function mapMessage(m) {
     locked: m.locked ?? false,
     createdAt: m.created_at,
   };
+}
+
+
+function normalized(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function asList(value) {
+  return Array.isArray(value) ? value.map(normalized).filter(Boolean) : [];
+}
+
+function includesLoose(haystack, needle) {
+  const a = normalized(haystack);
+  const b = normalized(needle);
+  return !!a && !!b && (a.includes(b) || b.includes(a));
+}
+
+function preferredAgeMatches(range, age) {
+  if (!range || !Number.isFinite(Number(age))) return false;
+  const numbers = String(range).match(/\d{2}/g)?.map(Number) || [];
+  if (!numbers.length) return false;
+  const min = Math.min(...numbers);
+  const max = numbers.length > 1 ? Math.max(...numbers) : min + 5;
+  return Number(age) >= min && Number(age) <= max;
+}
+
+// Transparent preference scoring: no private fields, precise location, or
+// hidden demographic weighting. The same reasons are shown to the member.
+function compatibilityFor(me, candidate) {
+  const mine = me.profile || {};
+  const theirs = candidate.profile || {};
+  let score = 42;
+  const reasons = [];
+
+  const myGender = normalized(mine.gender || me.gender);
+  const theirGender = normalized(theirs.gender || candidate.gender);
+  const iWant = normalized(mine.lookingFor);
+  const theyWant = normalized(theirs.lookingFor);
+  if ((!iWant || iWant === theirGender) && (!theyWant || theyWant === myGender)) {
+    score += 14; reasons.push("mutual preference");
+  }
+
+  const myCity = mine.city || me.city;
+  const theirCity = theirs.city || candidate.city;
+  if (includesLoose(myCity, theirCity) || includesLoose(mine.prefLocation, theirCity)) {
+    score += 10; reasons.push("location preference");
+  }
+
+  if (preferredAgeMatches(mine.prefAgeRange, theirs.age)) {
+    score += 7; reasons.push("age preference");
+  }
+
+  if (normalized(mine.relationshipGoal) && normalized(mine.relationshipGoal) === normalized(theirs.relationshipGoal)) {
+    score += 8; reasons.push("same relationship goal");
+  }
+  if (
+    normalized(mine.prefReligiosity) === normalized(theirs.religiosity)
+    || (normalized(mine.religiosity) && normalized(mine.religiosity) === normalized(theirs.religiosity))
+  ) {
+    score += 8; reasons.push("faith preference");
+  }
+  if (
+    (normalized(mine.sect) && normalized(mine.sect) === normalized(theirs.sect))
+    || normalized(mine.openDifferentSect) === "yes"
+  ) {
+    score += 6; reasons.push("sect preference");
+  }
+  if (normalized(mine.prefEducation) && normalized(mine.prefEducation) === normalized(theirs.education)) {
+    score += 5; reasons.push("education preference");
+  }
+
+  const mineInterests = new Set(asList(mine.interests));
+  const shared = asList(theirs.interests).filter((interest) => mineInterests.has(interest));
+  if (shared.length) {
+    score += Math.min(9, shared.length * 3);
+    reasons.push(`${shared.length} shared ${shared.length === 1 ? "interest" : "interests"}`);
+  }
+  if (
+    normalized(mine.openDivorced) === "yes"
+    || !normalized(theirs.maritalStatus)
+    || normalized(theirs.maritalStatus) === "never married"
+  ) score += 3;
+
+  return { score: Math.min(99, score), reasons: reasons.slice(0, 3) };
+}
+
+function isMutualGenderPreference(me, candidate) {
+  const mine = me.profile || {};
+  const theirs = candidate.profile || {};
+  const myGender = normalized(mine.gender || me.gender);
+  const theirGender = normalized(theirs.gender || candidate.gender);
+  const iWant = normalized(mine.lookingFor);
+  const theyWant = normalized(theirs.lookingFor);
+  return (!iWant || iWant === theirGender) && (!theyWant || theyWant === myGender);
 }
 
 
@@ -516,6 +662,24 @@ async function handlePost(path, body = {}) {
     });
     if (error) throw new Error(error.message);
     return data;
+  }
+
+  if (p === "/notifications/strong-match") {
+    const { error } = await supabase.rpc("notify_strong_match", {
+      candidate_id: body.candidateId,
+      compatibility_score: Number(body.score || 0),
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  }
+
+  if (p === "/notifications/read") {
+    const ids = Array.isArray(body.ids) && body.ids.length ? body.ids : null;
+    const { data, error } = await supabase.rpc("mark_notifications_read", {
+      notification_ids: ids,
+    });
+    if (error) throw new Error(error.message);
+    return { updated: data || 0 };
   }
 
 
@@ -593,6 +757,14 @@ async function handlePost(path, body = {}) {
     if (error) throw new Error(error.message);
     return { ok: true };
   }
+  if (p === "/safety/admin/photo-review") {
+    const { error } = await supabase.rpc("admin_review_photo", {
+      review_path: body.path,
+      requested_status: body.status,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  }
 
 
   throw new Error(`Unhandled POST ${path}`);
@@ -642,6 +814,22 @@ async function handleUpload(path, formData) {
         contentType: file.type,
       });
     if (upErr) throw new Error(upErr.message);
+
+    const { data: review, error: reviewError } = await supabase.functions.invoke(
+      "moderate-photo",
+      { body: { path: key, main: q.main === "true" } }
+    );
+    if (reviewError) {
+      await supabase.storage.from("photos").remove([key]);
+      throw new Error("Photo safety review is unavailable right now. Please try again shortly.");
+    }
+    if (review?.status !== "approved") {
+      const pendingError = new Error(
+        review?.reason || "This photo cannot be used. Please upload a different photo."
+      );
+      pendingError.photoReviewStatus = review?.status || "pending";
+      throw pendingError;
+    }
 
     const currentMain = storedPhotoPath(me.profilePhoto);
     const currentGallery = (me.photos || []).map(storedPhotoPath).filter(Boolean);

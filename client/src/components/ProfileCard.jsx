@@ -15,6 +15,12 @@ export default function ProfileCard({ p, onConnect, status }) {
         {blurred && <span className="lock">🔒 Photos shown after match</span>}
       </div>
       <div className="body">
+        {p.matchScore >= 60 && (
+          <div className="match-score" title={(p.matchReasons || []).join(", ")}>
+            <strong>{p.matchScore}% match</strong>
+            {p.matchReasons?.[0] && <span>{p.matchReasons[0]}</span>}
+          </div>
+        )}
         <h4>
           {name}
           {p.badge && <span className="badge-verified" title="Verified">✔</span>}

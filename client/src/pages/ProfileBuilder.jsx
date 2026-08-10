@@ -29,6 +29,8 @@ export default function ProfileBuilder() {
   const [data, setData] = useState(user.profile || {});
   const [photoPrivacy, setPhotoPrivacy] = useState(user.photoPrivacy ?? marriage);
   const [busy, setBusy] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoReviewPending, setPhotoReviewPending] = useState(false);
   const [err, setErr] = useState("");
 
   const set = (name) => (e) => setData({ ...data, [name]: e.target.value });
@@ -78,15 +80,42 @@ export default function ProfileBuilder() {
     if (!file) return;
     const fd = new FormData();
     fd.append("photo", file);
+    setPhotoBusy(true);
+    setErr("");
     try {
       const { user: u } = await api.upload(`/profile/photo?main=${main}`, fd);
       setUser(u);
+      setPhotoReviewPending(false);
     } catch (e) {
-      setErr(e.error || "Could not upload photo");
+      setErr(e.message || e.error || "Could not upload photo");
+      setPhotoReviewPending(["pending", "review"].includes(e.photoReviewStatus));
+    } finally {
+      setPhotoBusy(false);
+      e.target.value = "";
+    }
+  }
+
+  async function checkPhotoReview() {
+    setPhotoBusy(true);
+    try {
+      const { user: updated } = await api.get("/auth/me");
+      setUser(updated);
+      if (updated.profilePhoto) {
+        setPhotoReviewPending(false);
+        setErr("");
+      } else {
+        setErr("Your photo is still waiting for the safety team.");
+      }
+    } finally {
+      setPhotoBusy(false);
     }
   }
 
   async function finish() {
+    if (!user.profilePhoto) {
+      setErr("Please upload one approved main profile photo before continuing.");
+      return;
+    }
     setBusy(true); setErr("");
     try {
       const { user: u } = await api.put("/profile", { profile: data, photoPrivacy });
@@ -203,21 +232,26 @@ export default function ProfileBuilder() {
           ) : (
             <>
               <h2>Add your photos</h2>
-              <p className="hint">A clear main photo makes a strong first impression.</p>
+              <p className="hint">Use a clear, real photo of yourself. Nudity and AI-generated profile photos are removed.</p>
               <div className="ob-photo-main">
                 {user.profilePhoto ? <img src={user.profilePhoto} alt="" /> : <span>＋</span>}
               </div>
               <div className="ob-field">
                 <label>Main profile photo</label>
-                <input className="ob-file" type="file" accept="image/*" onChange={(e) => uploadPhoto(e, "true")} />
+                <input className="ob-file" type="file" accept="image/jpeg,image/png,image/webp" disabled={photoBusy} onChange={(e) => uploadPhoto(e, "true")} />
               </div>
               <div className="ob-field" style={{ marginTop: 14 }}>
                 <label>More photos (up to 5)</label>
-                <input className="ob-file" type="file" accept="image/*" onChange={(e) => uploadPhoto(e, "false")} />
+                <input className="ob-file" type="file" accept="image/jpeg,image/png,image/webp" disabled={photoBusy} onChange={(e) => uploadPhoto(e, "false")} />
               </div>
               <div className="ob-gallery">
                 {(user.photos || []).map((p) => <img key={p} src={p} alt="" />)}
               </div>
+              {photoReviewPending && (
+                <button type="button" className="ob-btn ghost" onClick={checkPhotoReview} disabled={photoBusy}>
+                  Check photo review status
+                </button>
+              )}
               {marriage && (
                 <label className="ob-check">
                   <input type="checkbox" checked={photoPrivacy} onChange={(e) => setPhotoPrivacy(e.target.checked)} />
@@ -237,8 +271,8 @@ export default function ProfileBuilder() {
             {!onPhotoStep ? (
               <button className="ob-btn" onClick={nextStep}>Continue</button>
             ) : (
-              <button className="ob-btn" onClick={finish} disabled={busy}>
-                {busy ? "Saving…" : "Finish & Start Browsing"}
+              <button className="ob-btn" onClick={finish} disabled={busy || photoBusy}>
+                {photoBusy ? "Reviewing photo..." : busy ? "Saving..." : "Finish & Start Browsing"}
               </button>
             )}
           </div>

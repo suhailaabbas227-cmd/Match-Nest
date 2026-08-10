@@ -15,6 +15,7 @@ export type Profile = {
   dateOfBirth: string;
   mode: MatchMode | null;
   gender: string;
+  country: string;
   city: string;
   profile: Record<string, unknown>;
   profileComplete: boolean;

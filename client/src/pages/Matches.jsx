@@ -33,7 +33,17 @@ export default function Matches() {
         <h3 style={{ marginTop: 0 }}>Incoming requests {requests.length > 0 && `(${requests.length})`}</h3>
         {requests.length === 0 ? (
           <p className="section-sub" style={{ margin: 0 }}>No pending requests.</p>
-        ) : requests.map((r) => (
+        ) : requests.map((r, index) => r.locked ? (
+          <div className="list-row locked-request" key={`locked-${index}`}>
+            <div className="avatar locked-identity">?</div>
+            <div>
+              <div className="locked-name">Someone likes your profile</div>
+              <div className="section-sub" style={{ margin: 0 }}>Upgrade to reveal their identity and respond.</div>
+            </div>
+            <div className="spacer" />
+            <button className="btn sm" onClick={() => nav("/plans")}>Reveal with Premium</button>
+          </div>
+        ) : (
           <div className="list-row" key={r.connId}>
             <div className="avatar">
               {r.user.profilePhoto ? <img src={r.user.profilePhoto} alt="" /> : Name(r.user)[0]}

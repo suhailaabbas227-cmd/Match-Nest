@@ -17,15 +17,23 @@ export default function Browse() {
     const qs = new URLSearchParams(
       Object.entries(filters).filter(([, v]) => v)
     ).toString();
-    const [{ profiles }, { matches }, { requests }] = await Promise.all([
+    const [{ profiles }, { matches }, { outgoing }] = await Promise.all([
       api.get(`/browse?${qs}`),
       api.get("/browse/me/matches"),
-      api.get("/browse/me/requests"),
+      api.get("/browse/me/outgoing"),
     ]);
     const map = {};
     matches.forEach((m) => (map[m.user.id] = "accepted"));
+    outgoing.forEach((item) => (map[item.userId] = "pending"));
     setProfiles(profiles);
-    setStatuses((s) => ({ ...map, ...s }));
+    setStatuses((s) => ({ ...s, ...map }));
+    const strongest = profiles[0];
+    if (strongest?.matchScore >= 70) {
+      api.post("/notifications/strong-match", {
+        candidateId: strongest.id,
+        score: strongest.matchScore,
+      }).catch(() => {});
+    }
     setLoading(false);
   }
 
