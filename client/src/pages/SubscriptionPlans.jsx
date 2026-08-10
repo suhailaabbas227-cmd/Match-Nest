@@ -43,14 +43,6 @@ const paymentMethods = [
   { id: "easypaisa", name: "Easypaisa", detail: "Pay with your Easypaisa account" },
 ];
 
-const benefits = [
-  "See who is interested in you",
-  "Send unlimited connection requests",
-  "Appear higher in profile discovery",
-  "Use advanced partner search filters",
-  "Premium support and account assistance",
-];
-
 export default function SubscriptionPlans() {
   const [selected, setSelected] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("card");
@@ -66,18 +58,6 @@ export default function SubscriptionPlans() {
           on finding the right connection.
         </p>
       </section>
-
-      <div className="plans-notice" role="note">
-        <span aria-hidden="true">♡</span>
-        <div>
-          <strong>Payment setup is being finalized</strong>
-          <p>
-            You can select a plan and preferred payment method now. Checkout
-            will activate after secure merchant details are connected, and no
-            charge will be made today.
-          </p>
-        </div>
-      </div>
 
       <section className="plans-grid" aria-label="Subscription plans">
         {plans.map((plan) => {
@@ -140,18 +120,6 @@ export default function SubscriptionPlans() {
             );
           })}
         </div>
-      </section>
-
-      <section className="premium-benefits">
-        <div>
-          <span className="plans-kicker">Included in every plan</span>
-          <h2>More opportunities to find the right person</h2>
-        </div>
-        <ul>
-          {benefits.map((benefit) => (
-            <li key={benefit}><span aria-hidden="true">✓</span>{benefit}</li>
-          ))}
-        </ul>
       </section>
 
       {selected && (

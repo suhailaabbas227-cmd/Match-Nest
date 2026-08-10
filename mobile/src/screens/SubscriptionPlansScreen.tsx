@@ -38,13 +38,6 @@ export function SubscriptionPlansScreen({ navigation }: Props) {
       <Text style={styles.title}>Choose the plan that fits your journey</Text>
       <Text style={styles.subtitle}>Premium supports both Dating and Marriage modes.</Text>
 
-      <View style={styles.notice}>
-        <Text style={styles.noticeTitle}>Payment setup is being finalized</Text>
-        <Text style={styles.noticeCopy}>
-          Select your plan and preferred method now. Checkout will activate after secure merchant details are connected.
-        </Text>
-      </View>
-
       <View style={styles.list}>
         {plans.map((plan) => {
           const active = selected === plan.id;
@@ -110,10 +103,7 @@ const styles = StyleSheet.create({
   eyebrow: { marginTop: 30, color: colors.pink, fontSize: 11, fontWeight: "900", letterSpacing: 1.2 },
   title: { marginTop: 8, color: colors.text, fontSize: 31, lineHeight: 37, fontWeight: "900", letterSpacing: -0.7 },
   subtitle: { marginTop: 9, color: colors.muted, fontSize: 15, lineHeight: 22 },
-  notice: { marginTop: 22, padding: 16, borderRadius: radii.medium, borderWidth: 1, borderColor: "#E7CFF7", backgroundColor: colors.purpleSoft },
-  noticeTitle: { color: colors.purpleDark, fontWeight: "900" },
-  noticeCopy: { marginTop: 5, color: colors.muted, fontSize: 13, lineHeight: 19 },
-  list: { marginTop: 18, gap: 14 },
+  list: { marginTop: 22, gap: 14 },
   card: { padding: 20, borderRadius: radii.large, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, ...shadow },
   cardActive: { borderWidth: 2, borderColor: colors.purple },
   cardTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },

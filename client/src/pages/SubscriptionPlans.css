@@ -34,33 +34,6 @@
   line-height: 1.65;
 }
 
-.plans-notice {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  max-width: 860px;
-  margin: 0 auto 34px;
-  padding: 16px 18px;
-  color: #593479;
-  border: 1px solid #ecd7f8;
-  border-radius: 16px;
-  background: linear-gradient(90deg, #fff0f7, #f5edff);
-}
-
-.plans-notice > span {
-  display: grid;
-  flex: 0 0 34px;
-  height: 34px;
-  place-items: center;
-  color: #fff;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--pink), var(--purple));
-  font-size: 20px;
-}
-
-.plans-notice strong { display: block; margin-bottom: 3px; }
-.plans-notice p { margin: 0; color: #705f7e; font-size: 14px; line-height: 1.5; }
-
 .plans-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -222,23 +195,6 @@
 .payment-option strong { display: block; font-size: 14px; }
 .payment-option small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.35; }
 
-.premium-benefits {
-  display: grid;
-  grid-template-columns: .9fr 1.1fr;
-  gap: 48px;
-  margin-top: 34px;
-  padding: 32px;
-  border: 1px solid #ebdce7;
-  border-radius: 22px;
-  background: #fff;
-  box-shadow: 0 14px 38px rgba(139, 61, 240, .07);
-}
-
-.premium-benefits h2 { margin: 9px 0 0; color: #21192c; font-size: 27px; line-height: 1.25; }
-.premium-benefits ul { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
-.premium-benefits li { display: flex; align-items: center; gap: 10px; color: #574d5d; }
-.premium-benefits li span { color: var(--pink); font-weight: 900; }
-
 .selected-plan {
   display: flex;
   align-items: center;
@@ -268,7 +224,6 @@
   .payment-section { padding: 24px 18px; }
   .payment-grid { grid-template-columns: 1fr; }
   .plan-card { min-height: 350px; }
-  .premium-benefits { grid-template-columns: 1fr; gap: 24px; padding: 24px 20px; }
   .selected-plan { align-items: stretch; flex-direction: column; padding: 22px 20px; }
   .selected-plan button { width: 100%; }
 }
