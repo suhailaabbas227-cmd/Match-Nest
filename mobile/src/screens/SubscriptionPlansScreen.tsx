@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Brand } from "../components/Brand";
 import { Button } from "../components/Button";
 import { Screen } from "../components/Screen";
@@ -10,14 +10,26 @@ import type { RootStackParamList } from "../types";
 type Props = NativeStackScreenProps<RootStackParamList, "Plans">;
 
 const plans = [
-  { id: "silver", name: "Silver", months: 1, copy: "A flexible monthly start." },
-  { id: "golden", name: "Golden", months: 3, copy: "More time to build genuine connections.", badge: "Popular" },
-  { id: "platinum", name: "Platinum", months: 6, copy: "Created for a serious partner search." },
-  { id: "diamond", name: "Diamond", months: 12, copy: "Our longest plan and best long-term value.", badge: "Best value" },
+  { id: "silver", name: "Silver", months: 1, price: "Rs. 3,000", copy: "A flexible monthly start." },
+  { id: "gold", name: "Gold", months: 3, price: "Rs. 8,000", copy: "More time to build genuine connections.", badge: "Popular" },
+  { id: "platinum", name: "Platinum", months: 6, price: "Rs. 15,000", copy: "Created for a serious partner search." },
+  { id: "diamond", name: "Diamond", months: 12, price: "Rs. 28,000", copy: "Our longest plan and best long-term value.", badge: "Best value" },
+] as const;
+
+const paymentMethods = [
+  { id: "card", name: "Credit / Debit Card" },
+  { id: "paypal", name: "PayPal" },
+  { id: "apple-pay", name: "Apple Pay" },
+  { id: "google-pay", name: "Google Pay" },
+  { id: "jazzcash", name: "JazzCash" },
+  { id: "easypaisa", name: "Easypaisa" },
 ] as const;
 
 export function SubscriptionPlansScreen({ navigation }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState("card");
+  const selectedPlan = plans.find((plan) => plan.id === selected);
+  const selectedPayment = paymentMethods.find((method) => method.id === paymentMethod);
 
   return (
     <Screen>
@@ -29,7 +41,7 @@ export function SubscriptionPlansScreen({ navigation }: Props) {
       <View style={styles.notice}>
         <Text style={styles.noticeTitle}>Payment setup is being finalized</Text>
         <Text style={styles.noticeCopy}>
-          Prices and payment methods will be shown before payments go live. No charge will be made today.
+          Select your plan and preferred method now. Checkout will activate after secure merchant details are connected.
         </Text>
       </View>
 
@@ -48,7 +60,7 @@ export function SubscriptionPlansScreen({ navigation }: Props) {
                 <Text style={styles.months}>{plan.months === 1 ? "Month" : "Months"}</Text>
               </View>
               <Text style={styles.planCopy}>{plan.copy}</Text>
-              <Text style={styles.pricePending}>Price to be added</Text>
+              <Text style={styles.price}>{plan.price}</Text>
               <Button
                 label={active ? "Selected" : `Select ${plan.name}`}
                 onPress={() => setSelected(plan.id)}
@@ -60,10 +72,32 @@ export function SubscriptionPlansScreen({ navigation }: Props) {
         })}
       </View>
 
-      {selected ? (
+      <Text style={styles.paymentTitle}>Payment method</Text>
+      <Text style={styles.paymentSubtitle}>Choose how you would like to pay.</Text>
+      <View style={styles.paymentList}>
+        {paymentMethods.map((method) => {
+          const active = paymentMethod === method.id;
+          return (
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ checked: active }}
+              key={method.id}
+              onPress={() => setPaymentMethod(method.id)}
+              style={({ pressed }) => [styles.paymentOption, active && styles.paymentActive, pressed && styles.paymentPressed]}
+            >
+              <View style={[styles.radio, active && styles.radioActive]} />
+              <Text style={styles.paymentName}>{method.name}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {selectedPlan ? (
         <View style={styles.selectedNotice}>
-          <Text style={styles.selectedTitle}>Plan selected</Text>
-          <Text style={styles.selectedCopy}>Payment will be available after MatchNest payment setup is connected.</Text>
+          <Text style={styles.selectedTitle}>{selectedPlan.name} — {selectedPlan.price}</Text>
+          <Text style={styles.selectedCopy}>
+            {selectedPayment?.name}. Checkout will be available after MatchNest payment setup is connected.
+          </Text>
         </View>
       ) : null}
 
@@ -91,8 +125,17 @@ const styles = StyleSheet.create({
   duration: { color: colors.purple, fontSize: 42, fontWeight: "900" },
   months: { color: colors.muted, fontWeight: "800" },
   planCopy: { marginTop: 8, color: colors.muted, fontSize: 13, lineHeight: 19 },
-  pricePending: { marginTop: 15, padding: 10, overflow: "hidden", borderRadius: radii.small, color: colors.purpleDark, backgroundColor: colors.purpleSoft, textAlign: "center", fontSize: 12, fontWeight: "800" },
+  price: { marginTop: 15, padding: 10, overflow: "hidden", borderRadius: radii.small, color: colors.text, backgroundColor: colors.purpleSoft, textAlign: "center", fontSize: 20, fontWeight: "900" },
   selectButton: { marginTop: 12 },
+  paymentTitle: { marginTop: 28, color: colors.text, fontSize: 24, fontWeight: "900" },
+  paymentSubtitle: { marginTop: 5, color: colors.muted, fontSize: 14 },
+  paymentList: { marginTop: 13, gap: 10 },
+  paymentOption: { minHeight: 58, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, borderRadius: radii.medium, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  paymentActive: { borderColor: colors.pink, backgroundColor: colors.pinkSoft },
+  paymentPressed: { opacity: .85 },
+  radio: { width: 19, height: 19, borderRadius: 10, borderWidth: 2, borderColor: colors.muted, backgroundColor: colors.white },
+  radioActive: { borderWidth: 5, borderColor: colors.pink },
+  paymentName: { color: colors.text, fontSize: 14, fontWeight: "800" },
   selectedNotice: { marginTop: 18, padding: 17, borderRadius: radii.medium, backgroundColor: colors.pink },
   selectedTitle: { color: colors.white, fontSize: 16, fontWeight: "900" },
   selectedCopy: { marginTop: 4, color: colors.white, fontSize: 13, lineHeight: 19, opacity: .9 },

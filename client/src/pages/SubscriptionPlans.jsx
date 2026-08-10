@@ -6,12 +6,14 @@ const plans = [
     id: "silver",
     name: "Silver",
     months: 1,
+    price: "Rs. 3,000",
     description: "A flexible monthly start.",
   },
   {
-    id: "golden",
-    name: "Golden",
+    id: "gold",
+    name: "Gold",
     months: 3,
+    price: "Rs. 8,000",
     description: "More time to build genuine connections.",
     badge: "Popular",
   },
@@ -19,15 +21,26 @@ const plans = [
     id: "platinum",
     name: "Platinum",
     months: 6,
+    price: "Rs. 15,000",
     description: "Created for a serious partner search.",
   },
   {
     id: "diamond",
     name: "Diamond",
     months: 12,
+    price: "Rs. 28,000",
     description: "Our longest plan for the best long-term value.",
     badge: "Best value",
   },
+];
+
+const paymentMethods = [
+  { id: "card", name: "Credit / Debit Card", detail: "Visa, Mastercard and international cards" },
+  { id: "paypal", name: "PayPal", detail: "Pay with your PayPal account" },
+  { id: "apple-pay", name: "Apple Pay", detail: "Available on supported Apple devices" },
+  { id: "google-pay", name: "Google Pay", detail: "Available on supported devices" },
+  { id: "jazzcash", name: "JazzCash", detail: "Pay with your JazzCash account" },
+  { id: "easypaisa", name: "Easypaisa", detail: "Pay with your Easypaisa account" },
 ];
 
 const benefits = [
@@ -40,6 +53,8 @@ const benefits = [
 
 export default function SubscriptionPlans() {
   const [selected, setSelected] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("card");
+  const chosenMethod = paymentMethods.find((method) => method.id === paymentMethod);
 
   return (
     <main className="plans-page">
@@ -57,8 +72,9 @@ export default function SubscriptionPlans() {
         <div>
           <strong>Payment setup is being finalized</strong>
           <p>
-            Compare and select a plan now. Prices and payment methods will be
-            shown before payments go live, and no charge will be made today.
+            You can select a plan and preferred payment method now. Checkout
+            will activate after secure merchant details are connected, and no
+            charge will be made today.
           </p>
         </div>
       </div>
@@ -81,7 +97,7 @@ export default function SubscriptionPlans() {
                 <span>{plan.months === 1 ? "Month" : "Months"}</span>
               </div>
               <p>{plan.description}</p>
-              <div className="plan-price-pending">Price to be added</div>
+              <div className="plan-price">{plan.price}</div>
               <button
                 type="button"
                 className="plan-select"
@@ -93,6 +109,37 @@ export default function SubscriptionPlans() {
             </article>
           );
         })}
+      </section>
+
+      <section className="payment-section" aria-labelledby="payment-heading">
+        <div className="payment-heading">
+          <div>
+            <span className="plans-kicker">Secure checkout</span>
+            <h2 id="payment-heading">Payment method</h2>
+            <p>Choose how you would like to pay.</p>
+          </div>
+          <span className="payment-lock" aria-hidden="true">⌁</span>
+        </div>
+        <div className="payment-grid">
+          {paymentMethods.map((method) => {
+            const active = paymentMethod === method.id;
+            return (
+              <button
+                type="button"
+                className={`payment-option ${active ? "active" : ""}`}
+                key={method.id}
+                onClick={() => setPaymentMethod(method.id)}
+                aria-pressed={active}
+              >
+                <span className="payment-radio" aria-hidden="true" />
+                <span>
+                  <strong>{method.name}</strong>
+                  <small>{method.detail}</small>
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </section>
 
       <section className="premium-benefits">
@@ -111,10 +158,11 @@ export default function SubscriptionPlans() {
         <section className="selected-plan" role="status" aria-live="polite">
           <div>
             <span>Your selection</span>
-            <h2>{selected.name} — {selected.months} {selected.months === 1 ? "month" : "months"}</h2>
+            <h2>{selected.name} — {selected.price}</h2>
             <p>
-              This plan is saved for this visit. Payment options will appear
-              here after MatchNest payment setup is connected.
+              {selected.months} {selected.months === 1 ? "month" : "months"}
+              {" · "}{chosenMethod?.name}. Checkout will activate after the
+              secure payment account is connected.
             </p>
           </div>
           <button type="button" disabled>Continue to payment</button>

@@ -16,7 +16,7 @@ export default function Navbar() {
         <NavLink to="/" end>Browse</NavLink>
         <NavLink to="/matches">Matches</NavLink>
         <NavLink to="/chat">Chat</NavLink>
-        <NavLink to="/plans">Plans</NavLink>
+        <NavLink to="/plans">Membership</NavLink>
         <NavLink to="/settings">Settings</NavLink>
         {user?.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
         <button className="btn ghost sm" onClick={() => { logout(); nav("/login"); }}>
