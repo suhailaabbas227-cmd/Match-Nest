@@ -1,10 +1,10 @@
-# MatchNest
+# The Match Nest
 
-MatchNest is a dating and marriage web app with two paths: Dating and Marriage.
+The Match Nest is a dating and marriage platform with native mobile and web applications.
 
 The repository now also contains a native React Native/Expo app in `mobile/`
 for Android and iPhone. It reuses the same Supabase authentication, database,
-security functions, and MatchNest branding. See `mobile/README.md` for setup.
+security functions, and The Match Nest branding. See `mobile/README.md` for setup.
 
 ## Current production stack
 
@@ -85,7 +85,7 @@ Configure these server-only Supabase Edge Function secrets:
 - `RESEND_API_KEY`
 - `NOTIFICATION_FROM_EMAIL` (a verified sender)
 - `NOTIFICATION_CRON_SECRET` (a long random server secret)
-- `APP_URL` (for example `https://matchnests.netlify.app`)
+- `APP_URL` (`https://thematchnest.com`)
 
 Without Sightengine credentials, new photos remain private in the manual admin
 review queue and are never published. Rejected nudity or high-confidence
@@ -120,7 +120,7 @@ variables in Netlify:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
 
-The current application is MatchNest. The frontend no longer depends on the
+The current application is The Match Nest. The frontend no longer depends on the
 old local JSON authentication service.
 
 ## Mobile app

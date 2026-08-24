@@ -56,6 +56,7 @@ export function rowToUser(r) {
     photoPrivacy: r.photo_privacy ?? false,
     blockedUsers: r.blocked_users || [],
     suspended: r.suspended ?? false,
+    deactivatedAt: r.deactivated_at || "",
     membership,
     isPremium: membership.is_premium === true,
     createdAt: r.created_at,
@@ -193,7 +194,7 @@ export async function signUpUser({ fullName, email, password, dateOfBirth, mode 
   const age = ageFromDob(dateOfBirth);
   if (age == null) return { error: "Please enter a valid date of birth." };
   if (age < 18) {
-    return { error: "Sorry, you must be at least 18 years old to use MatchNest." };
+    return { error: "Sorry, you must be at least 18 years old to use The Match Nest." };
   }
   if (age > 120) return { error: "Please enter a valid date of birth." };
 
@@ -238,10 +239,31 @@ export async function updatePassword(password) {
   return {};
 }
 
+export async function deactivateMyAccount() {
+  const { data, error } = await supabase.rpc("deactivate_my_account");
+  if (error) return { error: error.message };
+  return { user: await withSignedPhotos(rowToUser(data)) };
+}
+
+export async function reactivateMyAccount() {
+  const { data, error } = await supabase.rpc("reactivate_my_account");
+  if (error) return { error: error.message };
+  return { user: await withSignedPhotos(rowToUser(data)) };
+}
+
+export async function permanentlyDeleteMyAccount() {
+  const { data, error } = await supabase.functions.invoke("delete-account", {
+    body: { confirmation: "DELETE" },
+  });
+  if (error) return { error: error.message || "Could not delete the account." };
+  if (!data?.deleted) return { error: data?.error || "Could not delete the account." };
+  return { deleted: true };
+}
+
 export async function confirmDateOfBirth(dateOfBirth) {
   const age = ageFromDob(dateOfBirth);
   if (age == null || age > 120) return { error: "Please enter a valid date of birth." };
-  if (age < 18) return { error: "Sorry, you must be at least 18 years old to use MatchNest." };
+  if (age < 18) return { error: "Sorry, you must be at least 18 years old to use The Match Nest." };
 
   const { data, error } = await supabase.rpc("confirm_my_date_of_birth", {
     requested_dob: dateOfBirth,

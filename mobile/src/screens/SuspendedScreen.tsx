@@ -13,7 +13,7 @@ export function SuspendedScreen() {
       <View style={styles.card}>
         <Text style={styles.icon}>!</Text>
         <Text style={styles.title}>Account unavailable</Text>
-        <Text style={styles.copy}>This account is currently suspended. Contact MatchNest support if you believe this is a mistake.</Text>
+        <Text style={styles.copy}>This account is currently suspended. Contact The Match Nest support if you believe this is a mistake.</Text>
         <Button label="Log out" variant="ghost" onPress={signOut} />
       </View>
     </Screen>

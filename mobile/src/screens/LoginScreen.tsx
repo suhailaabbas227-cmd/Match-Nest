@@ -39,7 +39,7 @@ export function LoginScreen({ navigation }: Props) {
       <Brand compact />
       <View style={styles.heading}>
         <Text style={styles.title}>Welcome back</Text>
-        <Text style={styles.subtitle}>Log in to continue your MatchNest journey.</Text>
+        <Text style={styles.subtitle}>Log in to continue your journey on The Match Nest.</Text>
       </View>
 
       <View style={styles.card}>
@@ -68,7 +68,7 @@ export function LoginScreen({ navigation }: Props) {
       </View>
 
       <Pressable style={styles.switch} onPress={() => navigation.replace("SignUp")}>
-        <Text style={styles.switchText}>New to MatchNest? <Text style={styles.switchAccent}>Create account</Text></Text>
+        <Text style={styles.switchText}>New to The Match Nest? <Text style={styles.switchAccent}>Create account</Text></Text>
       </Pressable>
     </Screen>
   );

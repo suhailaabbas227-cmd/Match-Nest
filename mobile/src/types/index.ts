@@ -22,7 +22,57 @@ export type Profile = {
   suspended: boolean;
   deactivatedAt: string;
   verified: boolean;
+  badge?: boolean;
+  profilePhoto?: string | null;
+  photos?: string[];
+  photoPrivacy?: boolean;
   membership: Membership;
+};
+
+export type PublicProfile = {
+  id: string;
+  fullName: string;
+  gender: string;
+  country: string;
+  city: string;
+  mode: MatchMode | null;
+  profile: Record<string, any>;
+  profilePhoto: string | null;
+  photos: string[];
+  verified: boolean;
+  badge: boolean;
+  photosBlurred: boolean;
+  matchScore?: number;
+  matchReasons?: string[];
+};
+
+export type ChatMessage = {
+  id: string;
+  conversationId: string;
+  from: string;
+  fromName?: string;
+  text: string | null;
+  locked: boolean;
+  createdAt: string;
+};
+
+export type ConversationSummary = {
+  id: string;
+  user: PublicProfile;
+  lastMessage: string | null;
+  lastAt: string;
+};
+
+export type NotificationItem = {
+  id: string;
+  kind: string;
+  title: string;
+  body: string;
+  actor_id?: string | null;
+  actor_name?: string | null;
+  locked?: boolean;
+  read_at?: string | null;
+  created_at: string;
 };
 
 export type RootStackParamList = {
@@ -31,6 +81,8 @@ export type RootStackParamList = {
   Login: undefined;
   ForgotPassword: undefined;
   Home: undefined;
+  ProfileDetails: { userId: string };
+  Conversation: { userId: string };
   Plans: undefined;
   AccountSettings: undefined;
 };

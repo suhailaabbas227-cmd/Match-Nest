@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { Brand } from "../components/Brand";
 import { Button } from "../components/Button";
 import { Field } from "../components/Field";
@@ -97,12 +97,20 @@ export function SignUpScreen({ navigation }: Props) {
               placeholder="YYYY-MM-DD"
               keyboardType="numbers-and-punctuation"
               maxLength={10}
-              hint="MatchNest is strictly for adults aged 18 and over. Your date of birth stays private."
+              hint="The Match Nest is strictly for adults aged 18 and over. Your date of birth stays private."
             />
             <Button label="Create Account" onPress={submit} loading={busy} />
-            <Text style={styles.terms}>
-              By signing up, you agree to the MatchNest Terms of Service and Privacy Policy.
-            </Text>
+            <Text style={styles.terms}>By signing up, you agree to the </Text>
+            <View style={styles.legalRow}>
+              <Pressable onPress={() => void Linking.openURL("https://thematchnest.com/terms")}>
+                <Text style={styles.legalLink}>Terms of Service</Text>
+              </Pressable>
+              <Text style={styles.terms}> and </Text>
+              <Pressable onPress={() => void Linking.openURL("https://thematchnest.com/privacy")}>
+                <Text style={styles.legalLink}>Privacy Policy</Text>
+              </Pressable>
+              <Text style={styles.terms}>.</Text>
+            </View>
           </>
         )}
       </View>
@@ -124,6 +132,8 @@ const styles = StyleSheet.create({
   nameRow: { flexDirection: "row", gap: 10 },
   nameField: { flex: 1 },
   terms: { color: colors.muted, fontSize: 11, lineHeight: 17, textAlign: "center" },
+  legalRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "center", marginTop: -13 },
+  legalLink: { color: colors.pinkDark, fontSize: 11, lineHeight: 17, fontWeight: "800" },
   switch: { padding: 20, alignItems: "center" },
   switchText: { color: colors.muted },
   switchAccent: { color: colors.pink, fontWeight: "800" },

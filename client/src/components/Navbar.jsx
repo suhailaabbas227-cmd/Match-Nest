@@ -22,7 +22,7 @@ export default function Navbar() {
     <nav className="nav">
       <div className="brand matchnest-brand">
         <img src="/assets/matchnest-logo.png" alt="" aria-hidden="true" />
-        <span>Match<strong>Nest</strong></span>
+        <span>The <strong>Match Nest</strong></span>
       </div>
       {user?.mode && <span className="mode-pill">{user.mode} mode</span>}
       <div className="links">

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "MatchNest",
-    "slug": "matchnest",
+    "name": "The Match Nest",
+    "slug": "the-match-nest",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/matchnest-logo.png",
-    "scheme": "matchnest",
+    "scheme": "thematchnest",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -15,16 +15,30 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.matchnest.app"
+      "bundleIdentifier": "com.thematchnest.app",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.matchnest.app",
+      "package": "com.thematchnest.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/matchnest-logo.png",
         "backgroundColor": "#fff7fb"
       },
       "edgeToEdgeEnabled": true
     },
-    "plugins": ["expo-linking"]
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The Match Nest uses the photo you choose for your member profile.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
+    ]
   }
 }

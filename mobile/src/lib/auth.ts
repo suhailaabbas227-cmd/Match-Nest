@@ -32,14 +32,14 @@ export async function signUp(input: {
 }) {
   const age = ageFromDateOfBirth(input.dateOfBirth);
   if (age === null || age > 120) throw new Error("Enter your date of birth as YYYY-MM-DD.");
-  if (age < 18) throw new Error("You must be at least 18 years old to use MatchNest.");
+  if (age < 18) throw new Error("You must be at least 18 years old to use The Match Nest.");
   if (input.password.length < 8) throw new Error("Password must contain at least 8 characters.");
 
   const { data, error } = await supabase.auth.signUp({
     email: input.email.trim().toLowerCase(),
     password: input.password,
     options: {
-      emailRedirectTo: "matchnest://auth/callback",
+      emailRedirectTo: "thematchnest://auth/callback",
       data: {
         full_name: input.fullName.trim(),
         date_of_birth: input.dateOfBirth,
@@ -62,7 +62,7 @@ export async function signIn(email: string, password: string) {
 export async function requestPasswordReset(email: string) {
   const { error } = await supabase.auth.resetPasswordForEmail(
     email.trim().toLowerCase(),
-    { redirectTo: "matchnest://reset-password" },
+    { redirectTo: "thematchnest://reset-password" },
   );
   if (error) throw new Error(error.message);
 }

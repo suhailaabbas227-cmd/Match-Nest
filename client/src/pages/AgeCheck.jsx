@@ -39,7 +39,7 @@ export default function AgeCheck() {
           <div className="brand age-check-brand"><span>Match</span><strong>Nest</strong></div>
           <h2>Confirm you are 18+</h2>
           <p>
-            MatchNest is only for adults. Your exact date of birth is kept
+            The Match Nest is only for adults. Your exact date of birth is kept
             private and is not shown on your profile.
           </p>
         </div>

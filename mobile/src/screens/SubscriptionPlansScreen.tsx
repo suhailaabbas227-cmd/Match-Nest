@@ -43,7 +43,7 @@ function initialCurrency(country?: string | null): Currency {
 }
 
 function priceFor(plan: (typeof plans)[number], currency: Currency) {
-  const market = currencies.find((item) => item.id === currency) || currencies[1];
+  const market = currencies.find((item) => item.id === currency) ?? currencies[0]!;
   return new Intl.NumberFormat(market.locale, {
     style: "currency", currency,
     maximumFractionDigits: Number.isInteger(plan.prices[currency]) ? 0 : 2,
@@ -70,7 +70,7 @@ export function SubscriptionPlansScreen({ navigation }: Props) {
   return (
     <Screen>
       <Brand compact />
-      <Text style={styles.eyebrow}>MATCHNEST PREMIUM</Text>
+      <Text style={styles.eyebrow}>THE MATCH NEST PREMIUM</Text>
       <Text style={styles.title}>Choose the plan that fits your journey</Text>
       <Text style={styles.subtitle}>Premium supports both Dating and Marriage modes.</Text>
 
@@ -94,7 +94,7 @@ export function SubscriptionPlansScreen({ navigation }: Props) {
             <View key={plan.id} style={[styles.card, active && styles.cardActive]}>
               <View style={styles.cardTop}>
                 <View style={styles.icon}><Text style={styles.iconText}>{plan.id === "diamond" ? "◇" : "♡"}</Text></View>
-                {plan.badge ? <Text style={styles.badge}>{plan.badge}</Text> : null}
+                {"badge" in plan ? <Text style={styles.badge}>{plan.badge}</Text> : null}
               </View>
               <Text style={styles.planName}>{plan.name}</Text>
               <View style={styles.durationRow}>
@@ -138,7 +138,7 @@ export function SubscriptionPlansScreen({ navigation }: Props) {
         <View style={styles.selectedNotice}>
           <Text style={styles.selectedTitle}>{selectedPlan.name} — {priceFor(selectedPlan, currency)}</Text>
           <Text style={styles.selectedCopy}>
-            {selectedPayment?.name}. Checkout will be available after MatchNest payment setup is connected.
+            {selectedPayment?.name}. Checkout will be available after The Match Nest payment setup is connected.
           </Text>
         </View>
       ) : null}

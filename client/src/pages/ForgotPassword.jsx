@@ -32,7 +32,7 @@ export default function ForgotPassword() {
         <div className="auth-head">
           <div className="brand">Match<span>Nest</span></div>
           <h2>Reset your password</h2>
-          <p>Enter the email address used for your MatchNest account.</p>
+          <p>Enter the email address used for your account on The Match Nest.</p>
         </div>
 
         {sent ? (

@@ -111,7 +111,7 @@ export function AccountSettingsScreen({ navigation }: Props) {
       <View style={[styles.card, styles.dangerCard]}>
         <Text style={[styles.cardTitle, styles.dangerTitle]}>Delete account</Text>
         <Text style={styles.copy}>
-          Permanently remove your MatchNest account and personal data. This action cannot be undone.
+          Permanently remove your The Match Nest profile and personal data. This action cannot be undone.
         </Text>
         <Button
           label="Permanently delete account"

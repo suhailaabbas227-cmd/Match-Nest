@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const resendKey = Deno.env.get("RESEND_API_KEY");
   const from = Deno.env.get("NOTIFICATION_FROM_EMAIL");
-  const appUrl = Deno.env.get("APP_URL") || "https://matchnests.netlify.app";
+  const appUrl = Deno.env.get("APP_URL") || "https://thematchnest.com";
   if (!supabaseUrl || !serviceKey || !resendKey || !from) {
     return response({ error: "Email provider is not configured" }, 503);
   }
@@ -50,11 +50,11 @@ Deno.serve(async (req) => {
     }
 
     const reveal = !!subscription || !item.premium_identity;
-    const actorName = actor?.profile?.displayName || actor?.profile?.fullLegalName || actor?.full_name || "A MatchNest member";
-    const subject = reveal ? item.title : "New activity on MatchNest";
+    const actorName = actor?.profile?.displayName || actor?.profile?.fullLegalName || actor?.full_name || "A Match Nest member";
+    const subject = reveal ? item.title : "New activity on The Match Nest";
     const message = reveal
       ? `${actorName}: ${item.body}`
-      : "Someone is interested in you. Open MatchNest and upgrade to reveal their identity.";
+      : "Someone is interested in you. Open The Match Nest and upgrade to reveal their identity.";
 
     const mail = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
         from,
         to: [recipient.email],
         subject,
-        text: `${message}\n\nOpen MatchNest: ${appUrl}/notifications\n\nFor your privacy, message text is never included in notification emails.`,
+        text: `${message}\n\nOpen The Match Nest: ${appUrl}/notifications\n\nFor your privacy, message text is never included in notification emails.`,
       }),
     });
 

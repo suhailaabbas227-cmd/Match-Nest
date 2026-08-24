@@ -1,0 +1,17 @@
+{
+  "name": "The Match Nest",
+  "short_name": "Match Nest",
+  "description": "Intentional dating and marriage matching in one secure platform.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF7FB",
+  "theme_color": "#EC1E79",
+  "icons": [
+    {
+      "src": "/assets/matchnest-logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

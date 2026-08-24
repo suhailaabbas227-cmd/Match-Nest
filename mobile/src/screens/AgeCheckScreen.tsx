@@ -20,7 +20,7 @@ export function AgeCheckScreen() {
     setError("");
     const age = ageFromDateOfBirth(dateOfBirth);
     if (age === null || age < 18 || age > 120) {
-      setError("You must be at least 18 years old to use MatchNest.");
+      setError("You must be at least 18 years old to use The Match Nest.");
       return;
     }
     setBusy(true);
@@ -40,7 +40,7 @@ export function AgeCheckScreen() {
         <View style={styles.badge}><Text style={styles.badgeText}>18+</Text></View>
         <Text style={styles.title}>Confirm you are an adult</Text>
         <Text style={styles.copy}>
-          MatchNest is only for people aged 18 and over. Your full date of birth is private and
+          The Match Nest is only for people aged 18 and over. Your full date of birth is private and
           will not appear on your public profile.
         </Text>
         {error ? <Notice text={error} /> : null}

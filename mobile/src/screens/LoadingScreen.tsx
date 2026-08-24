@@ -7,7 +7,7 @@ export function LoadingScreen() {
     <View style={styles.page}>
       <Brand centered />
       <ActivityIndicator size="large" color={colors.pink} />
-      <Text style={styles.text}>Preparing your MatchNest experience…</Text>
+      <Text style={styles.text}>Preparing your The Match Nest experience...</Text>
     </View>
   );
 }

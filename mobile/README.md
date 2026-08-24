@@ -1,18 +1,26 @@
-# MatchNest mobile app
+# The Match Nest mobile app
 
-This directory contains the native Android and iOS MatchNest application built
+This directory contains the native Android and iOS The Match Nest application built
 with React Native and Expo. It connects to the same secured Supabase project as
 the existing web client.
 
 ## Implemented mobile flow
 
-- Native MatchNest welcome screen
+- Native The Match Nest welcome screen
 - Email signup and login
 - Private 18+ date-of-birth validation
 - Email verification state
 - Password reset deep link handling
 - Dating or Marriage selection
 - Basic profile completion
+- Safety-reviewed main profile photo upload
+- Discover profiles with transparent compatibility reasons
+- Incoming, outgoing and accepted connections
+- Premium-aware messaging with locked free-tier messages
+- In-app activity notifications
+- Report and block member controls
+- Membership plans with localized display currencies
+- Public Terms, Privacy and account-deletion links on `thematchnest.com`
 - Persistent Supabase sessions using device storage
 - Suspended-account protection
 - Email password reset from login and account settings
@@ -40,11 +48,15 @@ and Xcode are not required for the first device test.
 Add these allowed redirect URLs in Supabase Authentication settings before
 testing email confirmation and password recovery:
 
-- `matchnest://auth/callback`
-- `matchnest://reset-password`
+- `thematchnest://auth/callback`
+- `thematchnest://reset-password`
 
 Never add the Supabase service-role key to this directory. Only the public
 publishable key belongs in `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+
+For an EAS production build, add both `EXPO_PUBLIC_` values to the EAS
+production environment before running the build. Authentication redirect URLs
+must also be allowed in Supabase.
 
 ## Account lifecycle backend
 
@@ -64,8 +76,14 @@ all database rows that cascade from their profile.
 
 The `app.json` application IDs are currently:
 
-- Android: `com.matchnest.app`
-- iOS: `com.matchnest.app`
+- Android: `com.thematchnest.app`
+- iOS: `com.thematchnest.app`
 
 These must be confirmed before the first Play Store or App Store release,
 because changing an application ID after publishing creates a different app.
+
+Generate a Play Store App Bundle with:
+
+```powershell
+npx eas-cli build --platform android --profile production
+```

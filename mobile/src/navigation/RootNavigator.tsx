@@ -14,6 +14,8 @@ import { ResetPasswordScreen } from "../screens/ResetPasswordScreen";
 import { SignUpScreen } from "../screens/SignUpScreen";
 import { SuspendedScreen } from "../screens/SuspendedScreen";
 import { SubscriptionPlansScreen } from "../screens/SubscriptionPlansScreen";
+import { ProfileDetailsScreen } from "../screens/ProfileDetailsScreen";
+import { ConversationScreen } from "../screens/ConversationScreen";
 import { WelcomeScreen } from "../screens/WelcomeScreen";
 import type { RootStackParamList } from "../types";
 import { colors } from "../theme";
@@ -35,6 +37,8 @@ function MemberNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Home">
       <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="ProfileDetails" component={ProfileDetailsScreen} />
+      <Stack.Screen name="Conversation" component={ConversationScreen} />
       <Stack.Screen name="Plans" component={SubscriptionPlansScreen} />
       <Stack.Screen name="AccountSettings" component={AccountSettingsScreen} />
     </Stack.Navigator>

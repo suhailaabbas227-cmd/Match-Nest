@@ -7,10 +7,10 @@ function Logo() {
   return (
     <div className="hs-logo">
       <span className="mark">
-        <img src="/assets/matchnest-logo.png" alt="MatchNest logo" />
+        <img src="/assets/matchnest-logo.png" alt="The Match Nest logo" />
       </span>
       <span className="name">
-        <span className="pink">Match</span><b>Nest</b>
+        <span className="the">The </span><span className="pink">Match</span><b> Nest</b>
         <div className="tag">Dating &amp; Marriage, Your Way</div>
       </span>
     </div>
@@ -104,7 +104,7 @@ export default function Signup() {
             Meet verified people for genuine dating or find a life partner
             for marriage. Create your account and choose your path.
           </p>
-          <div className="hs-path-preview" aria-label="Ways to use MatchNest">
+          <div className="hs-path-preview" aria-label="Ways to use The Match Nest">
             <div className="dating">
               <span className="hs-path-icon" aria-hidden="true">♥</span>
               <div>
@@ -120,7 +120,7 @@ export default function Signup() {
               </div>
             </div>
           </div>
-          <div className="hs-trust-points" aria-label="MatchNest benefits">
+          <div className="hs-trust-points" aria-label="The Match Nest benefits">
             <span>Verified profiles</span>
             <span>Privacy first</span>
             <span>Connections with intent</span>
@@ -165,7 +165,7 @@ export default function Signup() {
           {confirmationEmail && (
             <div className="success" role="status">
               <b>Check your email.</b><br />
-              We sent a secure verification link to {confirmationEmail}. Open it to activate your MatchNest account.
+              We sent a secure verification link to {confirmationEmail}. Open it to activate your profile on The Match Nest.
             </div>
           )}
 
@@ -195,7 +195,7 @@ export default function Signup() {
                   aria-label="Date of birth"
                 />
               </div>
-              <p className="hs-age-note">MatchNest is for adults aged 18 and over only.</p>
+              <p className="hs-age-note">The Match Nest is for adults aged 18 and over only.</p>
               <button className="hs-submit" disabled={busy}>{busy ? "Creating…" : "Create Account"}</button>
             </form>
           ) : tab === "login" ? (
@@ -239,8 +239,8 @@ export default function Signup() {
           </div>
 
           <p className="hs-terms">
-            By signing up, you agree to our <a href="#" onClick={(e) => e.preventDefault()}>Terms of Service</a>
-            {" "}and <a href="#" onClick={(e) => e.preventDefault()}>Privacy Policy</a>.
+            By signing up, you agree to our <a href="/terms" target="_blank" rel="noreferrer">Terms of Service</a>
+            {" "}and <a href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>.
           </p>
         </section>
       </div>

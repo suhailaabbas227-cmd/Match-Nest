@@ -17,7 +17,7 @@ export function WelcomeScreen({ navigation }: Props) {
         <Text style={styles.eyebrow}>ONE APP, TWO MEANINGFUL PATHS</Text>
         <Text style={styles.title}>Meet someone who wants what you want.</Text>
         <Text style={styles.lead}>
-          Choose genuine dating or marriage with intent. MatchNest keeps both experiences
+          Choose genuine dating or marriage with intent. The Match Nest keeps both experiences
           separate, private and focused.
         </Text>
       </View>

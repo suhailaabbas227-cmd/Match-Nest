@@ -39,6 +39,7 @@
 .hs-logo .mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .hs-logo .name { font-size: 24px; font-weight: 800; line-height: 1; letter-spacing: -.5px; }
 .hs-logo .name b { color: var(--ink); }
+.hs-logo .name .the { color: var(--ink); font-size: 15px; }
 .hs-logo .name .pink { color: var(--pink); }
 .hs-logo .tag { font-size: 11px; color: var(--muted); margin-top: 3px; font-weight: 500; }
 

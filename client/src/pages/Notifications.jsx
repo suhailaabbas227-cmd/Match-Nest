@@ -85,7 +85,7 @@ export default function Notifications() {
       </div>
 
       <p className="notification-email-note">
-        Email alerts will use the same privacy rules after MatchNest's verified email provider is connected.
+        Email alerts will use the same privacy rules after The Match Nest's verified email provider is connected.
       </p>
     </div>
   );
