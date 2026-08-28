@@ -24,9 +24,9 @@ function LegalLayout({ title, intro, children }) {
 
 export function PrivacyPolicy() {
   return (
-    <LegalLayout title="Privacy Policy" intro="This policy explains how The Match Nest handles information when you use our dating and marriage services worldwide.">
+    <LegalLayout title="Privacy Policy" intro="This policy explains how The Match Nest handles information when you use our friendship and marriage services worldwide.">
       <h2>Who we are</h2>
-      <p>The Match Nest provides an adults-only platform for intentional dating and marriage matching. Privacy questions can be sent to <a href="mailto:privacy@thematchnest.com">privacy@thematchnest.com</a>.</p>
+      <p>The Match Nest provides an adults-only platform for intentional friendship and marriage matching. Privacy questions can be sent to <a href="mailto:privacy@thematchnest.com">privacy@thematchnest.com</a>.</p>
       <h2>Information we collect</h2>
       <p>We collect account information such as name, email address and private date of birth; profile details including gender, city, country, relationship preferences, faith, education, interests, biography and photos; messages and connection activity; subscription status; reports, blocks and safety-review records; and limited technical information needed for security, troubleshooting and service operation.</p>
       <h2>How we use information</h2>
@@ -53,7 +53,7 @@ export function TermsOfService() {
   return (
     <LegalLayout title="Terms of Service" intro="These terms govern your access to The Match Nest web and mobile applications.">
       <h2>Eligibility</h2>
-      <p>You must be at least 18 years old, legally able to enter an agreement, and permitted to use dating or marriage services where you live. You must provide accurate account information and keep your credentials secure.</p>
+      <p>You must be at least 18 years old, legally able to enter an agreement, and permitted to use friendship or marriage services where you live. You must provide accurate account information and keep your credentials secure.</p>
       <h2>Respectful and lawful use</h2>
       <p>You may not impersonate another person, upload deceptive or AI-generated identity photos, post nudity or illegal content, harass or threaten members, solicit money, promote scams, scrape profiles, bypass access controls, or use the service for trafficking, exploitation or any unlawful purpose.</p>
       <h2>Member content</h2>

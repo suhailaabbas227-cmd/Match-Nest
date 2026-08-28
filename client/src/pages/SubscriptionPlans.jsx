@@ -93,7 +93,7 @@ export default function SubscriptionPlans() {
         <span className="plans-kicker">The Match Nest Premium</span>
         <h1>Choose the plan that fits your journey</h1>
         <p>
-          Premium works across both Dating and Marriage modes, so you can focus
+          Premium works across both Friendship and Marriage modes, so you can focus
           on finding the right connection.
         </p>
         <label className="billing-market">
