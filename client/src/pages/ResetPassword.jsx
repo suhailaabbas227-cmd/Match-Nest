@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabase";
 import { updatePassword } from "../api";
+import { validateNewPassword } from "../passwordPolicy";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -14,8 +15,9 @@ export default function ResetPassword() {
     event.preventDefault();
     setError("");
 
-    if (password.length < 8) {
-      setError("Use at least 8 characters.");
+    const passwordError = validateNewPassword(password);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
     if (password !== confirmation) {
@@ -45,7 +47,7 @@ export default function ResetPassword() {
         <div className="auth-head">
           <div className="brand">Match<span>Nest</span></div>
           <h2>Choose a new password</h2>
-          <p>Use at least 8 characters and do not reuse an old password.</p>
+          <p>Use 8 to 64 characters and do not reuse an old password.</p>
         </div>
 
         <form onSubmit={submit}>
@@ -55,7 +57,6 @@ export default function ResetPassword() {
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            minLength={8}
             required
             autoComplete="new-password"
           />
@@ -65,7 +66,6 @@ export default function ResetPassword() {
             type="password"
             value={confirmation}
             onChange={(event) => setConfirmation(event.target.value)}
-            minLength={8}
             required
             autoComplete="new-password"
           />
