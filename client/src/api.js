@@ -3,6 +3,7 @@
 // safety) directly against Supabase, so the existing pages keep calling
 // api.get / api.post / api.put / api.upload with the same paths.
 import { supabase } from "./supabase";
+import { validateNewPassword } from "./passwordPolicy";
 
 const PUBLIC_PROFILE_SELECT = [
   "id",
@@ -191,6 +192,9 @@ export async function getMe() {
 
 
 export async function signUpUser({ fullName, email, password, dateOfBirth, mode }) {
+  const passwordError = validateNewPassword(password);
+  if (passwordError) return { error: passwordError };
+
   const age = ageFromDob(dateOfBirth);
   if (age == null) return { error: "Please enter a valid date of birth." };
   if (age < 18) {
@@ -234,6 +238,9 @@ export async function requestPasswordReset(email) {
 }
 
 export async function updatePassword(password) {
+  const passwordError = validateNewPassword(password);
+  if (passwordError) return { error: passwordError };
+
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: error.message };
   return {};
