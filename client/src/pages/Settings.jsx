@@ -114,7 +114,7 @@ export default function Settings() {
           You are in <b style={{ textTransform: "capitalize" }}>{user.mode}</b> mode. Switch any time; your profile data is kept.
         </p>
         <button className="btn sm" onClick={switchMode}>
-          Switch to {user.mode === "marriage" ? "Dating" : "Marriage"} mode
+          Switch to {user.mode === "marriage" ? "Friendship" : "Marriage"} mode
         </button>
       </div>
 
