@@ -1,5 +1,18 @@
 import { supabase } from "./supabase";
 
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 64;
+
+export function validateNewPassword(password: string) {
+  if (password.length < PASSWORD_MIN_LENGTH) {
+    return "Password must be at least " + PASSWORD_MIN_LENGTH + " characters.";
+  }
+  if (password.length > PASSWORD_MAX_LENGTH) {
+    return "Password cannot exceed " + PASSWORD_MAX_LENGTH + " characters.";
+  }
+  return null;
+}
+
 export function ageFromDateOfBirth(value: string) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
   if (!match) return null;
@@ -33,7 +46,8 @@ export async function signUp(input: {
   const age = ageFromDateOfBirth(input.dateOfBirth);
   if (age === null || age > 120) throw new Error("Enter your date of birth as YYYY-MM-DD.");
   if (age < 18) throw new Error("You must be at least 18 years old to use The Match Nest.");
-  if (input.password.length < 8) throw new Error("Password must contain at least 8 characters.");
+  const passwordError = validateNewPassword(input.password);
+  if (passwordError) throw new Error(passwordError);
 
   const { data, error } = await supabase.auth.signUp({
     email: input.email.trim().toLowerCase(),
@@ -68,7 +82,8 @@ export async function requestPasswordReset(email: string) {
 }
 
 export async function updatePassword(password: string) {
-  if (password.length < 8) throw new Error("Password must contain at least 8 characters.");
+  const passwordError = validateNewPassword(password);
+  if (passwordError) throw new Error(passwordError);
   const { error } = await supabase.auth.updateUser({ password });
   if (error) throw new Error(error.message);
 }
