@@ -137,7 +137,7 @@ export default function ProfileBuilder() {
 
       <div className="ob-wrap">
         <div className={`ob-head ${marriage ? "" : "no-subtitle"}`}>
-          <h1>{marriage ? "Build your marriage profile" : "Set up your dating profile"}</h1>
+          <h1>{marriage ? "Build your marriage profile" : "Set up your friendship profile"}</h1>
           {marriage && (
             <p>A complete profile helps families and matches get to know you properly.</p>
           )}
