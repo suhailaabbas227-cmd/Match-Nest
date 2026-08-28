@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getMe, signInUser, signUpUser } from "../api";
+import { validateNewPassword } from "../passwordPolicy";
 import "./Signup.css";
 
 function Logo() {
@@ -37,7 +38,13 @@ export default function Signup() {
 
   async function submitSignup(e) {
     e.preventDefault();
-    setErr(""); setBusy(true);
+    setErr("");
+    const passwordError = validateNewPassword(f.password);
+    if (passwordError) {
+      setErr(passwordError);
+      return;
+    }
+    setBusy(true);
     try {
       const res = await signUpUser({
         fullName: `${f.firstName} ${f.lastName}`.trim(),
@@ -183,7 +190,7 @@ export default function Signup() {
                 <input id="su-email" type="email" value={f.email} onChange={set("email")} required placeholder="Email Address" />
               </div>
               <div className="hs-field">
-                <input type={showPw ? "text" : "password"} value={f.password} onChange={set("password")} required minLength={8} autoComplete="new-password" placeholder="Password (8+ characters)" />
+                <input type={showPw ? "text" : "password"} value={f.password} onChange={set("password")} required autoComplete="new-password" placeholder="Password (8-64 characters)" aria-label="Password, 8 to 64 characters" />
                 <button type="button" className="eye" onClick={() => setShowPw(!showPw)} aria-label="Toggle password">{showPw ? "Hide" : "Show"}</button>
               </div>
               <div className="hs-field">
