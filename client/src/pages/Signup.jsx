@@ -12,7 +12,7 @@ function Logo() {
       </span>
       <span className="name">
         <span className="the">The </span><span className="pink">Match</span><b> Nest</b>
-        <div className="tag">Dating &amp; Marriage, Your Way</div>
+        <div className="tag">Friendship &amp; Marriage, Your Way</div>
       </span>
     </div>
   );
@@ -102,20 +102,20 @@ export default function Signup() {
       <div className="hs-main">
         {/* hero */}
         <section className="hs-hero">
-          <span className="hs-badge">Dating and marriage, in one place</span>
+          <span className="hs-badge">Friendship and marriage, in one place</span>
           <h1>
             <span className="l1">One place.</span><br />
             <span className="l2">Two meaningful paths.</span>
           </h1>
           <p className="lead">
-            Meet verified people for genuine dating or find a life partner
+            Meet verified people for genuine friendship or find a life partner
             for marriage. Create your account and choose your path.
           </p>
           <div className="hs-path-preview" aria-label="Ways to use The Match Nest">
             <div className="dating">
               <span className="hs-path-icon" aria-hidden="true">♥</span>
               <div>
-                <strong>Dating</strong>
+                <strong>Friendship</strong>
                 <small>Build a genuine connection</small>
               </div>
             </div>
