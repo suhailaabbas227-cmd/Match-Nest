@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getMe, signInUser, signUpUser } from "../api";
 import { validateNewPassword } from "../passwordPolicy";
@@ -18,9 +18,22 @@ function Logo() {
   );
 }
 
+function WelcomeSplash() {
+  return (
+    <div className="hs-welcome" role="status" aria-live="polite">
+      <div className="hs-welcome-inner">
+        <p>WELCOME TO</p>
+        <img src="/assets/matchnest-logo.png" alt="The Match Nest" />
+      </div>
+    </div>
+  );
+}
+
 export default function Signup() {
   const nav = useNavigate();
   const formRef = useRef(null);
+
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const [tab, setTab] = useState("signup"); // 'signup' | 'login'
   const [showPw, setShowPw] = useState(false);
@@ -35,6 +48,16 @@ export default function Signup() {
   const [lf, setLf] = useState({ email: "", password: "" });
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   const setL = (k) => (e) => setLf({ ...lf, [k]: e.target.value });
+
+  useEffect(() => {
+    ["/assets/friendship-meeting.png", "/assets/marriage-couple.png"].forEach((src) => {
+      const image = new Image();
+      image.src = src;
+    });
+
+    const timer = window.setTimeout(() => setShowWelcome(false), 3000);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   async function submitSignup(e) {
     e.preventDefault();
@@ -87,6 +110,8 @@ export default function Signup() {
     }
   }
 
+  if (showWelcome) return <WelcomeSplash />;
+
   return (
     <div className="hs">
       {/* ---- top bar ---- */}
@@ -134,18 +159,28 @@ export default function Signup() {
           </div>
         </section>
 
-        {/* hero photo */}
-        <section className="hs-photo">
-          <img
-            src="/couple.jpg"
-            alt="A couple — woman in hijab and man in a suit"
-            onError={(e) => {
-              // Fall back to a hosted photo until a local /public/couple.jpg is added.
-              e.currentTarget.onerror = null;
-              e.currentTarget.src =
-                "https://images.pexels.com/photos/30439703/pexels-photo-30439703.jpeg?auto=compress&cs=tinysrgb&w=900&h=1300&fit=crop";
-            }}
-          />
+        {/* Friendship and marriage paths */}
+        <section className="hs-photo" aria-label="Friendship and marriage paths">
+          <figure className="hs-photo-panel friendship">
+            <img
+              src="/assets/friendship-meeting.png"
+              alt="A woman and man getting to know each other over coffee"
+            />
+            <figcaption>
+              <strong>Friendship</strong>
+              <span>Start with a genuine conversation</span>
+            </figcaption>
+          </figure>
+          <figure className="hs-photo-panel marriage">
+            <img
+              src="/assets/marriage-couple.png"
+              alt="A bride and groom celebrating their marriage"
+            />
+            <figcaption>
+              <strong>Marriage</strong>
+              <span>Find a life partner with shared intentions</span>
+            </figcaption>
+          </figure>
         </section>
 
         {/* signup / login card */}
@@ -254,3 +289,4 @@ export default function Signup() {
     </div>
   );
 }
+
