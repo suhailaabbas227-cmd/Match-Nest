@@ -6,7 +6,7 @@ import { Field } from "../components/Field";
 import { Notice } from "../components/Notice";
 import { Screen } from "../components/Screen";
 import { useAuth } from "../context/AuthContext";
-import { updatePassword } from "../lib/auth";
+import { PASSWORD_MAX_LENGTH, updatePassword } from "../lib/auth";
 import { colors, radii, shadow } from "../theme";
 
 export function ResetPasswordScreen() {
@@ -35,7 +35,7 @@ export function ResetPasswordScreen() {
       <Brand compact />
       <View style={styles.heading}>
         <Text style={styles.title}>Choose a new password</Text>
-        <Text style={styles.subtitle}>Use at least 8 characters and keep it private.</Text>
+        <Text style={styles.subtitle}>Use 8 to {PASSWORD_MAX_LENGTH} characters and keep it private.</Text>
       </View>
       <View style={styles.card}>
         {error ? <Notice text={error} /> : null}
