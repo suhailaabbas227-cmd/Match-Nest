@@ -50,7 +50,7 @@ export default function Signup() {
   const setL = (k) => (e) => setLf({ ...lf, [k]: e.target.value });
 
   useEffect(() => {
-    ["/assets/friendship-meeting.png", "/assets/marriage-couple.png"].forEach((src) => {
+    ["/assets/friendship-meeting.jpg", "/assets/marriage-couple.jpg"].forEach((src) => {
       const image = new Image();
       image.src = src;
     });
@@ -163,23 +163,17 @@ export default function Signup() {
         <section className="hs-photo" aria-label="Friendship and marriage paths">
           <figure className="hs-photo-panel friendship">
             <img
-              src="/assets/friendship-meeting.png"
+              src="/assets/friendship-meeting.jpg"
               alt="A woman and man getting to know each other over coffee"
             />
-            <figcaption>
-              <strong>Friendship</strong>
-              <span>Start with a genuine conversation</span>
-            </figcaption>
+            <figcaption><strong>Friendship</strong></figcaption>
           </figure>
           <figure className="hs-photo-panel marriage">
             <img
-              src="/assets/marriage-couple.png"
+              src="/assets/marriage-couple.jpg"
               alt="A bride and groom celebrating their marriage"
             />
-            <figcaption>
-              <strong>Marriage</strong>
-              <span>Find a life partner with shared intentions</span>
-            </figcaption>
+            <figcaption><strong>Marriage</strong></figcaption>
           </figure>
         </section>
 

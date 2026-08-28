@@ -270,13 +270,6 @@
 }
 .hs-photo-panel.friendship img { object-position: center 46%; }
 .hs-photo-panel.marriage img { object-position: center 35%; }
-.hs-photo-panel::after {
-  content: "";
-  position: absolute;
-  inset: 38% 0 0;
-  background: linear-gradient(180deg, transparent, rgba(20, 13, 25, .72));
-  pointer-events: none;
-}
 .hs-photo-panel figcaption {
   position: absolute;
   z-index: 1;
@@ -286,7 +279,6 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 3px;
   color: #fff;
   text-shadow: 0 2px 14px rgba(0,0,0,.45);
 }
@@ -295,7 +287,6 @@
   line-height: 1.1;
   letter-spacing: -.2px;
 }
-.hs-photo-panel figcaption span { font-size: 11px; line-height: 1.35; opacity: .95; }
 .hs-photo-panel:hover img { transform: scale(1.025); }
 .hs-photo-panel.friendship figcaption strong { color: #fff1f7; }
 .hs-photo-panel.marriage figcaption strong { color: #f3eaff; }
