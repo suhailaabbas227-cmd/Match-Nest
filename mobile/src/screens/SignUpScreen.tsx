@@ -6,7 +6,7 @@ import { Button } from "../components/Button";
 import { Field } from "../components/Field";
 import { Notice } from "../components/Notice";
 import { Screen } from "../components/Screen";
-import { signUp } from "../lib/auth";
+import { PASSWORD_MAX_LENGTH, signUp } from "../lib/auth";
 import { colors, radii, shadow } from "../theme";
 import type { RootStackParamList } from "../types";
 
@@ -88,7 +88,7 @@ export function SignUpScreen({ navigation }: Props) {
               onChangeText={setPassword}
               secureTextEntry
               textContentType="newPassword"
-              hint="Use at least 8 characters."
+              hint={"Use 8 to " + PASSWORD_MAX_LENGTH + " characters."}
             />
             <Field
               label="Date of birth *"
