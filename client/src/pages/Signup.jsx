@@ -195,7 +195,7 @@ export default function Signup() {
           <div className="hs-card-head">
             <div>
               <h2>{tab === "signup" ? "Create your account" : "Welcome back"}</h2>
-              <p className="sub">{tab === "signup" ? "It only takes a minute." : "Log in to continue."}</p>
+              {tab === "login" && <p className="sub">Log in to continue.</p>}
             </div>
             <div className="have">
               {tab === "signup" ? "Already have an account?" : "New here?"}{" "}
