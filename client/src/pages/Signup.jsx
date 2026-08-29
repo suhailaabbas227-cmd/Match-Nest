@@ -22,7 +22,7 @@ function Logo() {
         <img src="/assets/matchnest-logo.png" alt="The Match Nest logo" />
       </span>
       <span className="name">
-        <span className="the">The </span><span className="pink">Match</span><b> Nest</b>
+        <span className="pink">Match</span><b> Nest</b>
         <div className="tag">Friendship &amp; Marriage, Your Way</div>
       </span>
     </div>
