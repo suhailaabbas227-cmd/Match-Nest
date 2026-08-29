@@ -176,17 +176,33 @@ export default function Signup() {
         <section className="hs-photo" aria-label="Friendship and marriage paths">
           <figure className="hs-photo-panel friendship">
             <img
+              className="hs-photo-image"
               src="/assets/friendship-meeting.jpg"
               alt="A woman and man getting to know each other over coffee"
             />
-            <figcaption><strong>Friendship</strong></figcaption>
+            <figcaption>
+              <img
+                className="hs-photo-symbol"
+                src="/assets/friendship-silhouette.png"
+                alt=""
+                aria-hidden="true"
+              />
+            </figcaption>
           </figure>
           <figure className="hs-photo-panel marriage">
             <img
+              className="hs-photo-image"
               src="/assets/marriage-couple.jpg"
               alt="A bride and groom celebrating their marriage"
             />
-            <figcaption><strong>Marriage</strong></figcaption>
+            <figcaption>
+              <img
+                className="hs-photo-symbol"
+                src="/assets/marriage-silhouette.png"
+                alt=""
+                aria-hidden="true"
+              />
+            </figcaption>
           </figure>
         </section>
 
