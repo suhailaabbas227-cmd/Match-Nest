@@ -93,7 +93,7 @@
 }
 .hs-logo { display: flex; align-items: center; gap: 12px; }
 .hs-logo .mark {
-  width: 52px; height: 52px; position: relative; flex-shrink: 0;
+  width: 60px; height: 60px; position: relative; flex-shrink: 0;
   overflow: hidden; border-radius: 12px; background: #fff;
   box-shadow: 0 6px 18px rgba(214, 33, 155, .16);
 }
