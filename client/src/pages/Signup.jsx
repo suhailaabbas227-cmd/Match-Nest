@@ -14,6 +14,7 @@ function getLatestAdultBirthDate() {
 }
 
 const LATEST_ADULT_BIRTH_DATE = getLatestAdultBirthDate();
+const SITE_COMING_SOON = true;
 
 function Logo() {
   return (
@@ -31,12 +32,13 @@ function Logo() {
 
 function WelcomeSplash() {
   return (
-    <div className="hs-welcome" role="status" aria-live="polite">
+    <div className={`hs-welcome${SITE_COMING_SOON ? " is-coming-soon" : ""}`} role="status" aria-live="polite">
       <div className="hs-welcome-inner">
         <p>WELCOME TO</p>
         <div className="hs-welcome-logo">
           <img src="/assets/matchnest-logo.png" alt="The Match Nest" />
         </div>
+        {SITE_COMING_SOON && <p className="hs-welcome-coming">COMING SOON</p>}
       </div>
     </div>
   );
@@ -73,6 +75,7 @@ export default function Signup() {
       image.src = src;
     });
 
+    if (SITE_COMING_SOON) return undefined;
     const timer = window.setTimeout(() => setShowWelcome(false), 3000);
     return () => window.clearTimeout(timer);
   }, []);
@@ -128,7 +131,7 @@ export default function Signup() {
     }
   }
 
-  if (showWelcome) return <WelcomeSplash />;
+  if (SITE_COMING_SOON || showWelcome) return <WelcomeSplash />;
 
   return (
     <div className="hs">

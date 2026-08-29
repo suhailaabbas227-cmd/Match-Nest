@@ -13,6 +13,7 @@
     linear-gradient(145deg, #fff4f8 0%, #fce6f3 48%, #f1e8ff 100%);
   animation: hsWelcomeFade 3s ease both;
 }
+.hs-welcome.is-coming-soon { animation: none; }
 .hs-welcome::before,
 .hs-welcome::after {
   content: "";
@@ -41,6 +42,19 @@
   font: 700 clamp(18px, 2.1vw, 28px)/1.2 "Poppins", "Segoe UI", sans-serif;
   letter-spacing: .38em;
   text-indent: .38em;
+}
+.hs-welcome-inner .hs-welcome-coming {
+  margin-top: 4px;
+  padding: 10px 18px;
+  border: 1px solid rgba(139,61,240,.2);
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(236,30,121,.09), rgba(139,61,240,.1));
+  color: #5b168f;
+  font-size: clamp(14px, 1.25vw, 19px);
+  font-weight: 800;
+  letter-spacing: .24em;
+  text-indent: .24em;
+  line-height: 1;
 }
 .hs-welcome-logo {
   position: relative;
