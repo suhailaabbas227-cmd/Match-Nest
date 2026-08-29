@@ -4,6 +4,17 @@ import { getMe, signInUser, signUpUser } from "../api";
 import { validateNewPassword } from "../passwordPolicy";
 import "./Signup.css";
 
+function getLatestAdultBirthDate() {
+  const cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - 18);
+  const year = cutoff.getFullYear();
+  const month = String(cutoff.getMonth() + 1).padStart(2, "0");
+  const day = String(cutoff.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+const LATEST_ADULT_BIRTH_DATE = getLatestAdultBirthDate();
+
 function Logo() {
   return (
     <div className="hs-logo">
@@ -23,7 +34,9 @@ function WelcomeSplash() {
     <div className="hs-welcome" role="status" aria-live="polite">
       <div className="hs-welcome-inner">
         <p>WELCOME TO</p>
-        <img src="/assets/matchnest-logo.png" alt="The Match Nest" />
+        <div className="hs-welcome-logo">
+          <img src="/assets/matchnest-logo.png" alt="The Match Nest" />
+        </div>
       </div>
     </div>
   );
@@ -222,16 +235,22 @@ export default function Signup() {
                 <input type={showPw ? "text" : "password"} value={f.password} onChange={set("password")} required autoComplete="new-password" placeholder="Password (8-64 characters)" aria-label="Password, 8 to 64 characters" />
                 <button type="button" className="eye" onClick={() => setShowPw(!showPw)} aria-label="Toggle password">{showPw ? "Hide" : "Show"}</button>
               </div>
-              <div className="hs-field">
+              <div className="hs-field hs-date-field">
+                <label className="hs-date-label" htmlFor="su-dob">Date of birth</label>
                 <input
+                  id="su-dob"
                   type="date"
                   value={f.dateOfBirth}
                   onChange={set("dateOfBirth")}
+                  max={LATEST_ADULT_BIRTH_DATE}
                   required
                   aria-label="Date of birth"
+                  aria-describedby="su-dob-help"
                 />
               </div>
-              <p className="hs-age-note">The Match Nest is for adults aged 18 and over only.</p>
+              <p className="hs-age-note" id="su-dob-help">
+                Choose your birth date, not today&apos;s date. The Match Nest is for adults aged 18 and over only.
+              </p>
               <button className="hs-submit" disabled={busy}>{busy ? "Creating…" : "Create Account"}</button>
             </form>
           ) : tab === "login" ? (
