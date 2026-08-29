@@ -86,6 +86,7 @@
   --pink-d: #d10f66;
   --magenta: #d6219b;
   --purple: #8b3df0;
+  --logo-purple: #3f0ba5;
   --ink: #1f2330;
   --muted: #6b7280;
   --line: #f0d9e4;
@@ -120,7 +121,7 @@
 }
 .hs-logo .mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .hs-logo .name { font-size: 24px; font-weight: 800; line-height: 1; letter-spacing: -.5px; }
-.hs-logo .name b { color: var(--ink); }
+.hs-logo .name b { color: var(--logo-purple); }
 .hs-logo .name .the { color: var(--ink); font-size: 15px; }
 .hs-logo .name .pink { color: var(--pink); }
 .hs-logo .tag { font-size: 11px; color: var(--muted); margin-top: 3px; font-weight: 500; }
