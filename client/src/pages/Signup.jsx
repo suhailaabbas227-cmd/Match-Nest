@@ -63,7 +63,12 @@ export default function Signup() {
   const setL = (k) => (e) => setLf({ ...lf, [k]: e.target.value });
 
   useEffect(() => {
-    ["/assets/friendship-meeting.jpg", "/assets/marriage-couple.jpg"].forEach((src) => {
+    [
+      "/assets/friendship-meeting.jpg",
+      "/assets/marriage-couple.jpg",
+      "/assets/friendship-silhouette.png",
+      "/assets/marriage-silhouette.png",
+    ].forEach((src) => {
       const image = new Image();
       image.src = src;
     });
@@ -151,14 +156,18 @@ export default function Signup() {
           </p>
           <div className="hs-path-preview" aria-label="Ways to use The Match Nest">
             <div className="dating">
-              <span className="hs-path-icon" aria-hidden="true">♥</span>
+              <span className="hs-path-icon" aria-hidden="true">
+                <img src="/assets/friendship-silhouette.png" alt="" />
+              </span>
               <div>
                 <strong>Friendship</strong>
                 <small>Build a genuine connection</small>
               </div>
             </div>
             <div className="marriage">
-              <span className="hs-path-icon" aria-hidden="true">◇</span>
+              <span className="hs-path-icon" aria-hidden="true">
+                <img src="/assets/marriage-silhouette.png" alt="" />
+              </span>
               <div>
                 <strong>Marriage</strong>
                 <small>Find your life partner</small>
@@ -180,14 +189,7 @@ export default function Signup() {
               src="/assets/friendship-meeting.jpg"
               alt="A woman and man getting to know each other over coffee"
             />
-            <figcaption>
-              <img
-                className="hs-photo-symbol"
-                src="/assets/friendship-silhouette.png"
-                alt=""
-                aria-hidden="true"
-              />
-            </figcaption>
+            <figcaption><strong>Friendship</strong></figcaption>
           </figure>
           <figure className="hs-photo-panel marriage">
             <img
@@ -195,14 +197,7 @@ export default function Signup() {
               src="/assets/marriage-couple.jpg"
               alt="A bride and groom celebrating their marriage"
             />
-            <figcaption>
-              <img
-                className="hs-photo-symbol"
-                src="/assets/marriage-silhouette.png"
-                alt=""
-                aria-hidden="true"
-              />
-            </figcaption>
+            <figcaption><strong>Marriage</strong></figcaption>
           </figure>
         </section>
 
