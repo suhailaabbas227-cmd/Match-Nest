@@ -249,7 +249,7 @@ export default function Signup() {
                 />
               </div>
               <p className="hs-age-note" id="su-dob-help">
-                Choose your birth date, not today&apos;s date. The Match Nest is for adults aged 18 and over only.
+                Choose your date of birth. The Match Nest is for adults aged 18 and over only.
               </p>
               <button className="hs-submit" disabled={busy}>{busy ? "Creating…" : "Create Account"}</button>
             </form>
