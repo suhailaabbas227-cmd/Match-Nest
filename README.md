@@ -41,6 +41,29 @@ before connecting the public frontend:
 5. `supabase/freemium_access.sql`
 6. `supabase/trust_and_discovery.sql`
 
+For a pre-launch preview populated with synthetic members, apply
+`supabase/demo_profiles.sql` after the six production migrations above. This
+adds a protected server-only demo marker and lets demo profiles auto-match and
+auto-reply without changing Premium rules for real members.
+
+Then run the idempotent seed from `client/` with server-only credentials:
+
+```powershell
+$env:SUPABASE_URL = "https://your-project.supabase.co"
+$env:SUPABASE_SERVICE_ROLE_KEY = "your-service-role-key"
+npm run seed:demo
+```
+
+The seed creates 300 clearly labelled fictional accounts: 75 male and 75 female
+profiles in Friendship, plus 75 male and 75 female profiles in Marriage.
+Marriage previews contain fuller biodata; Friendship previews are shorter and
+personality-focused. No portrait, phone number, guardian contact, or real email
+address is added. Run `npm run seed:demo:clean` with the same server-only
+environment variables to remove every demo account and its conversations.
+
+Never add `SUPABASE_SERVICE_ROLE_KEY` to a `VITE_` variable, `.env` committed to
+Git, Netlify client settings, or browser code.
+
 The Phase 1 migration is required. It separates private account data, enforces
 18+ access, protects matching and chat actions with database functions, and
 makes profile photos private. It is additive and preserves existing accounts.

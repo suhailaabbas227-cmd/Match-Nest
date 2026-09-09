@@ -12,10 +12,10 @@ export default function Browse() {
   const [statuses, setStatuses] = useState({}); // userId -> connection status
   const [loading, setLoading] = useState(true);
 
-  async function load() {
+  async function load(activeFilters = filters) {
     setLoading(true);
     const qs = new URLSearchParams(
-      Object.entries(filters).filter(([, v]) => v)
+      Object.entries(activeFilters).filter(([, v]) => v)
     ).toString();
     const [{ profiles }, { matches }, { outgoing }] = await Promise.all([
       api.get(`/browse?${qs}`),
@@ -45,13 +45,22 @@ export default function Browse() {
   }
 
   const set = (k) => (e) => setFilters({ ...filters, [k]: e.target.value });
+  const demoCount = profiles.filter((profile) => profile.profile?.isDemo === true).length;
+  const modeLabel = user.mode === "marriage" ? "Marriage" : "Friendship";
 
   return (
     <div className="container">
       <h1 className="section-title">Browse profiles</h1>
       <p className="section-sub">
-        People in <b>{user.mode}</b> mode who match your filters. Send a request — chat unlocks when they accept.
+        People in <b>{modeLabel}</b> mode who match your filters. Send a request — chat unlocks when they accept.
       </p>
+
+      {demoCount > 0 && (
+        <div className="demo-notice">
+          Preview mode: showing {demoCount} synthetic demo {demoCount === 1 ? "profile" : "profiles"} in these results.
+          Search for <b>Demo</b>, try a match, and open chat—no real person is behind these profiles.
+        </div>
+      )}
 
       <div className="filters">
         <div>
@@ -84,7 +93,7 @@ export default function Browse() {
           <input type="number" value={filters.maxAge} onChange={set("maxAge")} />
         </div>
         <button className="btn sm" onClick={load}>Apply</button>
-        <button className="btn ghost sm" onClick={() => { setFilters(empty); setTimeout(load, 0); }}>Reset</button>
+        <button className="btn ghost sm" onClick={() => { setFilters(empty); load(empty); }}>Reset</button>
       </div>
 
       {loading ? (

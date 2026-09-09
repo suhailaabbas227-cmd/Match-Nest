@@ -349,7 +349,7 @@ async function handleGet(path) {
       .eq("mode", me.mode).eq("verified", true).eq("profile_complete", true)
       .neq("id", me.id)
       .order("created_at", { ascending: false })
-      .limit(60);
+      .limit(300);
     const { data, error } = await query;
     if (error) throw new Error(error.message);
     const accepted = await myAcceptedIds(me.id);
@@ -487,11 +487,21 @@ async function handleGet(path) {
     const accepted = await myAcceptedIds(me.id);
     if (!accepted.has(otherId)) throw new Error("You can only chat with matched users");
     const convo = await getOrCreateConversation(otherId);
-    const [messages, access] = await Promise.all([
+    const [messages, access, profileMap] = await Promise.all([
       getConversationMessages(convo.id),
       getMyMembership(),
+      fetchProfiles([otherId]),
     ]);
-    return { conversation: convo, messages, access };
+    const other = profileMap[otherId] ? publicView(profileMap[otherId], true) : null;
+    const isDemo = other?.profile?.isDemo === true;
+    return {
+      conversation: convo,
+      messages,
+      user: other,
+      access: isDemo
+        ? { ...(access || {}), is_premium: true, status: "demo", is_demo_chat: true }
+        : access,
+    };
   }
 
 
