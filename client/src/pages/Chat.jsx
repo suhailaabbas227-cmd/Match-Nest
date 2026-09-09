@@ -32,7 +32,7 @@ export default function Chat() {
       setMessages(r.messages);
       setAccess(r.access);
       const o = conversations.find((c) => c.user?.id === userId)?.user;
-      setOther(o || null);
+      setOther(r.user || o || null);
     }).catch(() => {});
     // eslint-disable-next-line
   }, [userId, conversations]);
@@ -137,6 +137,7 @@ export default function Chat() {
               <div className="chat-head">
                 <div className="avatar" style={{ width: 38, height: 38 }}>{Name(other)[0]}</div>
                 <b>{Name(other)}</b>
+                {other?.profile?.isDemo && <span className="demo-badge">Demo</span>}
                 <div className="spacer" />
                 {user.mode === "marriage" && (
                   <button className="btn ghost sm" onClick={addChaperone} title="Add a family member to this chat">
@@ -146,6 +147,11 @@ export default function Chat() {
                 <button className="btn ghost sm" onClick={reportConversation}>Report</button>
                 <button className="btn danger sm" onClick={blockConversation}>Block</button>
               </div>
+              {other?.profile?.isDemo && (
+                <div className="demo-chat-note">
+                  Demo chat: this synthetic profile replies automatically. No real person receives these messages.
+                </div>
+              )}
               <div className="messages">
                 {messages.map((m) => {
                   const kind = m.isChaperone ? "chap" : m.from === user.id ? "mine" : "theirs";

@@ -4,6 +4,26 @@ import { api } from "../api";
 import { useAuth } from "../AuthContext";
 import { datingSteps, marriageSteps } from "../fields";
 
+function ProfileValue({ value }) {
+  if (Array.isArray(value)) {
+    if (value.every((item) => item && typeof item === "object" && (item.q || item.a))) {
+      return (
+        <div className="profile-prompts">
+          {value.map((item, index) => (
+            <div className="profile-prompt" key={`${item.q || "prompt"}-${index}`}>
+              {item.q && <b>{item.q}</b>}
+              {item.a && <span>{item.a}</span>}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return value.join(", ");
+  }
+  if (value && typeof value === "object") return JSON.stringify(value);
+  return String(value ?? "");
+}
+
 export default function ProfileView() {
   const { id } = useParams();
   const nav = useNavigate();
@@ -20,9 +40,12 @@ export default function ProfileView() {
 
   const steps = p.mode === "marriage" ? marriageSteps : datingSteps;
   const name = p.profile?.displayName || p.profile?.fullLegalName || p.fullName;
+  const isDemo = p.profile?.isDemo === true;
+  const initials = String(name || "Demo")
+    .split(/\s+/).filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
 
   async function connect() {
-    if (!user.isPremium) {
+    if (!user.isPremium && !isDemo) {
       nav("/plans");
       return;
     }
@@ -47,20 +70,21 @@ export default function ProfileView() {
       <div className="card">
         <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
           <div className="avatar" style={{ width: 96, height: 96 }}>
-            {p.profilePhoto ? <img src={p.profilePhoto} alt="" /> : <span style={{ fontSize: 34 }}>👤</span>}
+            {p.profilePhoto ? <img src={p.profilePhoto} alt="" /> : <span style={{ fontSize: 26 }}>{isDemo ? initials : "👤"}</span>}
           </div>
           <div>
             <h1 className="section-title" style={{ marginBottom: 2 }}>
               {name} {p.badge && <span className="badge-verified">✔</span>}
+              {isDemo && <span className="demo-badge">Demo profile</span>}
             </h1>
             <p className="section-sub" style={{ margin: 0 }}>
-              {p.age ? `${p.age} · ` : ""}{p.profile?.city || p.city} · <span style={{ textTransform: "capitalize" }}>{p.mode} mode</span>
+              {p.age ? `${p.age} · ` : ""}{p.profile?.city || p.city} · {p.mode === "marriage" ? "Marriage" : "Friendship"} mode
             </p>
           </div>
           <div className="spacer" />
           <div style={{ display: "flex", gap: 8 }}>
             <button className="btn sm" onClick={connect}>
-              {user.isPremium ? "Connect" : "Upgrade to connect"}
+              {isDemo ? "Try match" : user.isPremium ? "Connect" : "Upgrade to connect"}
             </button>
             <button className="btn ghost sm" onClick={report}>Report</button>
             <button className="btn danger sm" onClick={block}>Block</button>
@@ -70,6 +94,11 @@ export default function ProfileView() {
         {p.photosBlurred && (
           <div className="devbox" style={{ marginTop: 16 }}>
             🔒 This member keeps photos private until a match is accepted.
+          </div>
+        )}
+        {isDemo && (
+          <div className="demo-notice" style={{ marginTop: 16 }}>
+            This is synthetic preview data, not a real member. You can safely test matching and messaging.
           </div>
         )}
         {msg && <div className="success">{msg}</div>}
@@ -92,7 +121,7 @@ export default function ProfileView() {
                 {filled.map((f) => (
                   <div key={f.name} style={{ gridColumn: f.type === "textarea" ? "1 / -1" : "auto" }}>
                     <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 700 }}>{f.label}</div>
-                    <div>{p.profile[f.name]}</div>
+                    <div><ProfileValue value={p.profile[f.name]} /></div>
                   </div>
                 ))}
               </div>

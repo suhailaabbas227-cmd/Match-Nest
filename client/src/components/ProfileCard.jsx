@@ -7,14 +7,20 @@ export default function ProfileCard({ p, onConnect, status }) {
   const name = p.profile?.displayName || p.profile?.fullLegalName || p.fullName;
   const photo = p.profilePhoto;
   const blurred = p.photosBlurred;
+  const isDemo = p.profile?.isDemo === true;
+  const initials = String(name || "Demo")
+    .split(/\s+/).filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
 
   return (
-    <div className="profile-card">
+    <div className={`profile-card ${isDemo ? "demo-card" : ""}`}>
       <div className={`photo ${blurred ? "blur" : ""}`} onClick={() => nav(`/profile/${p.id}`)} style={{ cursor: "pointer" }}>
-        {photo ? <img src={photo} alt={name} /> : <span className="placeholder">👤</span>}
+        {photo ? <img src={photo} alt={name} /> : (
+          <span className={`placeholder ${isDemo ? "demo-avatar" : ""}`}>{isDemo ? initials : "👤"}</span>
+        )}
         {blurred && <span className="lock">🔒 Photos shown after match</span>}
       </div>
       <div className="body">
+        {isDemo && <span className="demo-badge">Demo profile</span>}
         {p.matchScore >= 60 && (
           <div className="match-score" title={(p.matchReasons || []).join(", ")}>
             <strong>{p.matchScore}% match</strong>
@@ -38,6 +44,8 @@ export default function ProfileCard({ p, onConnect, status }) {
             <button className="btn secondary sm" onClick={() => nav(`/chat/${p.id}`)}>Message</button>
           ) : status === "pending" ? (
             <button className="btn ghost sm" disabled>Request sent</button>
+          ) : isDemo ? (
+            <button className="btn sm" onClick={() => onConnect(p.id)}>Try match</button>
           ) : !user?.isPremium ? (
             <button className="btn sm" onClick={() => nav("/plans")}>Upgrade to connect</button>
           ) : (
